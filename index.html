@@ -1,0 +1,2873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>OrthoFlow — Clinical Dashboard</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OrthoFlow">
+<link rel="apple-touch-icon" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & TOKENS ─────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1b2d5b;
+  --navy-dark:#12204a;
+  --navy-mid:#243870;
+  --navy-light:#2f4a8a;
+  --gold:#c8982a;
+  --gold-light:#e4b84a;
+  --gold-pale:#fdf6e3;
+  --white:#ffffff;
+  --gray-50:#f8fafc;
+  --gray-100:#f1f5f9;
+  --gray-200:#e2e8f0;
+  --gray-300:#cbd5e1;
+  --gray-400:#94a3b8;
+  --gray-500:#64748b;
+  --gray-600:#475569;
+  --gray-700:#334155;
+  --gray-800:#1e293b;
+  --green:#22c55e;
+  --green-pale:#f0fdf4;
+  --red:#ef4444;
+  --red-pale:#fff1f2;
+  --amber:#f59e0b;
+  --sidebar-w:220px;
+  --topbar-h:56px;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --radius:8px;
+  --radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+}
+html,body{height:100%;overflow:hidden;font-family:var(--font-body);font-size:14px;color:var(--gray-800);background:var(--gray-100)}
+
+/* ─── APP SHELL ──────────────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100vh}
+
+/* TOP BAR */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:var(--topbar-h);
+  background:var(--navy-dark);
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+#topbar .brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+#topbar .brand-logo{
+  width:34px;height:34px;border-radius:8px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:var(--navy-dark);
+  font-family:'DM Serif Display',serif;letter-spacing:-1px;
+}
+#topbar .brand-text{color:white}
+#topbar .brand-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
+#topbar .brand-sub{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.3px;text-transform:uppercase}
+.topbar-sep{width:1px;height:28px;background:rgba(255,255,255,.1)}
+.topbar-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tb-btn{
+  height:32px;padding:0 14px;border:none;border-radius:6px;
+  font-family:var(--font-body);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;
+  letter-spacing:.1px;
+}
+.tb-btn-ghost{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85)}
+.tb-btn-ghost:hover{background:rgba(255,255,255,.15);color:white}
+.tb-btn-gold{background:var(--gold);color:var(--navy-dark)}
+.tb-btn-gold:hover{background:var(--gold-light)}
+.tb-btn-danger{background:rgba(239,68,68,.15);color:#fca5a5}
+.tb-btn-danger:hover{background:rgba(239,68,68,.25)}
+#save-status{
+  display:flex;align-items:center;gap:5px;font-size:11px;
+  color:rgba(255,255,255,.5);padding:0 6px;
+}
+#save-status .dot{width:6px;height:6px;border-radius:50%;background:var(--gray-400)}
+#save-status.saved .dot{background:var(--green)}
+#save-status.saving .dot{background:var(--amber);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+#save-status.saved{color:rgba(255,255,255,.6)}
+.progress-pill{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.08);border-radius:20px;
+  padding:3px 10px 3px 3px;
+}
+.progress-ring-wrap{position:relative;width:26px;height:26px}
+.progress-ring-track{fill:none;stroke:rgba(255,255,255,.12);stroke-width:3}
+.progress-ring-fill{fill:none;stroke:var(--gold);stroke-width:3;stroke-linecap:round;stroke-dasharray:65;transition:stroke-dashoffset .4s}
+#progress-pct{font-size:11px;font-weight:700;color:white}
+.lock-btn{background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1)}
+.lock-btn:hover{background:rgba(255,255,255,.1);color:white}
+
+/* BODY */
+#body{display:flex;margin-top:var(--topbar-h);height:calc(100vh - var(--topbar-h));overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--navy);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+#sidebar-header{
+  padding:16px 16px 12px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+#patient-pill{
+  background:rgba(255,255,255,.07);border-radius:8px;
+  padding:8px 10px;cursor:pointer;transition:background .15s;
+}
+#patient-pill:hover{background:rgba(255,255,255,.12)}
+.pp-label{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.5px;text-transform:uppercase}
+.pp-name{font-size:13px;font-weight:600;color:white;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-meta{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+#sidebar-nav{flex:1;overflow-y:auto;padding:10px 0}
+#sidebar-nav::-webkit-scrollbar{width:3px}
+#sidebar-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+.nav-group-label{
+  padding:10px 16px 4px;
+  font-size:9px;font-weight:700;
+  color:rgba(255,255,255,.3);letter-spacing:1px;text-transform:uppercase;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;cursor:pointer;
+  transition:background .12s;
+  position:relative;
+  border-radius:0;
+}
+.nav-item:hover{background:rgba(255,255,255,.06)}
+.nav-item.active{background:rgba(200,152,42,.18)}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:var(--gold);border-radius:0 2px 2px 0;
+}
+.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-label{font-size:12px;font-weight:500;color:rgba(255,255,255,.75);flex:1}
+.nav-item.active .nav-label{color:white;font-weight:600}
+.nav-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  background:var(--gray-500);
+}
+.nav-dot.complete{background:var(--green)}
+.nav-dot.partial{background:var(--amber)}
+#sidebar-footer{
+  padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);
+}
+.doc-card{
+  background:rgba(255,255,255,.06);border-radius:8px;padding:8px 10px;
+}
+.doc-name{font-size:12px;font-weight:600;color:white}
+.doc-title{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+
+/* MAIN CONTENT */
+#main{flex:1;overflow-y:auto;background:var(--gray-50)}
+#main::-webkit-scrollbar{width:5px}
+#main::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:4px}
+.content-panel{display:none;padding:24px;max-width:960px;margin:0 auto}
+.content-panel.active{display:block}
+.panel-header{margin-bottom:20px}
+.panel-title{
+  font-size:22px;font-weight:800;color:var(--navy);letter-spacing:-.4px;
+  font-family:'DM Serif Display',serif;
+}
+.panel-sub{font-size:12px;color:var(--gray-500);margin-top:3px}
+
+/* CARDS */
+.card{
+  background:white;border-radius:var(--radius-lg);
+  border:1px solid var(--gray-200);
+  box-shadow:var(--shadow);
+  margin-bottom:16px;overflow:hidden;
+}
+.card-header{
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--gray-100);
+  display:flex;align-items:center;gap:10px;
+}
+.card-icon{
+  width:28px;height:28px;border-radius:6px;
+  background:linear-gradient(135deg,var(--navy),var(--navy-light));
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;
+}
+.card-title{font-size:13px;font-weight:700;color:var(--navy)}
+.card-body{padding:16px 18px}
+.card-body.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card-body.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* FORM ELEMENTS */
+.field{display:flex;flex-direction:column;gap:4px}
+.field.span2{grid-column:span 2}
+.field.span3{grid-column:span 3}
+label.field-label{
+  font-size:11px;font-weight:600;color:var(--gray-600);
+  letter-spacing:.2px;text-transform:uppercase;
+}
+input[type=text],input[type=date],input[type=number],select,textarea{
+  width:100%;padding:8px 10px;
+  border:1.5px solid var(--gray-200);border-radius:var(--radius);
+  font-family:var(--font-body);font-size:13px;color:var(--gray-800);
+  background:white;transition:border-color .15s,box-shadow .15s;outline:none;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--navy-light);
+  box-shadow:0 0 0 3px rgba(27,45,91,.1);
+}
+textarea{resize:vertical;min-height:72px}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+input.anb-normal{background:#f0fdf4;border-color:#86efac;color:#15803d}
+input.anb-class2{background:#fff7ed;border-color:#fed7aa;color:#c2410c}
+input.anb-class3{background:#fdf4ff;border-color:#e9d5ff;color:#7e22ce}
+
+/* RADIO/CHECK GROUPS */
+.radio-group,.check-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.check-item{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:20px;
+  border:1.5px solid var(--gray-200);
+  cursor:pointer;transition:all .12s;font-size:12px;font-weight:500;color:var(--gray-600);
+  white-space:nowrap;user-select:none;
+}
+.check-item input{display:none}
+.check-item:has(input:checked){
+  background:var(--navy);border-color:var(--navy);color:white;
+}
+.check-item:hover:not(:has(input:checked)){background:var(--gray-50);border-color:var(--gray-300)}
+.check-item.radio-item:has(input:checked){background:var(--navy)}
+
+/* ANB CHIP */
+.anb-chip{
+  display:none;padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;margin-left:8px;
+}
+.anb-chip.normal{background:#dcfce7;color:#15803d}
+.anb-chip.class2{background:#fff7ed;color:#c2410c}
+.anb-chip.class3{background:#fdf4ff;color:#7e22ce}
+
+/* HINT TEXT */
+.hint{font-size:11px;color:var(--gray-400);margin-top:2px}
+
+/* SUBSECTION */
+.subsec{
+  margin-top:16px;padding-top:12px;
+  border-top:1.5px dashed var(--gray-200);
+}
+.subsec-title{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+/* SUMMARY BOX */
+.summary-box{
+  background:linear-gradient(135deg,#eef2ff,#e0e7ff);
+  border:1px solid #c7d2fe;border-radius:var(--radius-lg);
+  padding:14px 16px;margin-top:16px;
+}
+.summary-label{font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+#summary-text{font-size:12.5px;color:var(--gray-700);line-height:1.6}
+#summary-text.empty{color:var(--gray-400);font-style:italic}
+
+/* DIAGNOSIS SUGGESTIONS */
+#diag-suggestions-wrap{
+  background:var(--gold-pale);border:1px solid #e9d5a0;
+  border-radius:var(--radius-lg);padding:12px 14px;margin-top:12px;
+}
+.diag-sug-header{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.diag-sug-item{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 0;border-bottom:1px solid rgba(200,152,42,.2);
+}
+.diag-sug-item:last-child{border-bottom:none}
+.diag-sug-code{
+  font-size:11px;font-weight:700;color:var(--navy);
+  background:rgba(27,45,91,.08);padding:2px 6px;border-radius:4px;
+  flex-shrink:0;
+}
+.diag-sug-desc{flex:1;font-size:11.5px;color:var(--gray-700)}
+.btn-suggest{
+  font-size:11px;font-weight:600;padding:3px 8px;
+  background:var(--navy);color:white;border:none;border-radius:4px;cursor:pointer;
+  flex-shrink:0;transition:background .12s;
+}
+.btn-suggest:hover{background:var(--navy-light)}
+#diag-conflict-warn{display:none;margin-top:8px}
+.conflict-warn{
+  background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;
+  padding:6px 10px;font-size:11.5px;color:#c2410c;margin-bottom:4px;
+}
+
+/* PHOTOS */
+.photo-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+.photo-slot{
+  border:2px dashed var(--gray-200);border-radius:var(--radius-lg);
+  padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:border-color .15s;background:white;min-height:120px;
+  position:relative;
+}
+.photo-slot:has(.photo-thumb:not([style*="display:none"])){border-style:solid;border-color:var(--gray-200)}
+.photo-slot-label{font-size:10px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.3px;text-align:center}
+.photo-thumb{width:100%;height:80px;object-fit:cover;border-radius:6px}
+.photo-btn{
+  font-size:11px;font-weight:600;padding:5px 12px;
+  background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;
+}
+.photo-btn:hover{background:var(--navy-light)}
+input[type=file]{display:none}
+.photo-remove{
+  font-size:10px;padding:2px 8px;background:var(--red-pale);color:var(--red);
+  border:none;border-radius:4px;cursor:pointer;display:none;font-weight:600;
+}
+
+/* TOOTH CHART MODAL */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:white;border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);padding:24px;
+  max-width:560px;width:calc(100% - 40px);
+  max-height:90vh;overflow-y:auto;
+}
+.modal-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:6px;font-family:'DM Serif Display',serif}
+.modal-sub{font-size:12px;color:var(--gray-500);margin-bottom:16px}
+.tooth-row{display:flex;gap:3px;justify-content:center;margin-bottom:6px;flex-wrap:nowrap}
+.tooth{
+  width:30px;height:36px;border-radius:6px;
+  background:var(--gray-100);border:1.5px solid var(--gray-200);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;color:var(--gray-600);
+  transition:all .1s;flex-shrink:0;
+}
+.tooth:hover{background:var(--navy);color:white;border-color:var(--navy)}
+.tooth.selected{background:var(--red);border-color:#dc2626;color:white}
+.tooth-divider{width:12px;flex-shrink:0}
+.tooth-arch-label{text-align:center;font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+#selected-teeth-preview{
+  background:var(--gray-50);border:1.5px solid var(--gray-200);
+  border-radius:var(--radius);padding:8px 12px;
+  font-size:12px;font-weight:500;color:var(--gray-700);
+  min-height:36px;margin-bottom:12px;
+}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end}
+
+/* LOAD PATIENT MODAL */
+#load-modal .modal-box{max-width:640px}
+.patient-record-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:var(--radius);
+  border:1.5px solid var(--gray-200);margin-bottom:6px;
+  cursor:pointer;transition:all .12s;background:white;
+}
+.patient-record-item:hover{border-color:var(--navy-light);background:var(--gray-50)}
+.pr-info{flex:1;min-width:0}
+.pr-name{font-size:13px;font-weight:700;color:var(--navy)}
+.pr-meta{font-size:11px;color:var(--gray-500);margin-top:1px}
+.pr-del{
+  width:26px;height:26px;border-radius:50%;background:var(--red-pale);
+  color:var(--red);border:none;cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .12s;
+}
+.pr-del:hover{background:#fecdd3}
+#no-records-msg{text-align:center;color:var(--gray-400);font-size:13px;padding:24px 0}
+
+/* TEMPLATES */
+.template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.template-card{
+  padding:14px;border-radius:var(--radius-lg);border:2px solid var(--gray-200);
+  cursor:pointer;transition:all .15s;text-align:center;background:white;
+}
+.template-card:hover{border-color:var(--gold);background:var(--gold-pale);transform:translateY(-1px)}
+.tc-icon{font-size:24px;margin-bottom:6px}
+.tc-name{font-size:12px;font-weight:700;color:var(--navy)}
+.tc-desc{font-size:10.5px;color:var(--gray-500);margin-top:3px;line-height:1.4}
+
+/* SETTINGS BUTTONS */
+.settings-section{margin-bottom:20px}
+.settings-title{font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.settings-row:last-child{border-bottom:none}
+.sr-label{font-size:13px;font-weight:500;color:var(--gray-700)}
+.sr-sub{font-size:11px;color:var(--gray-400);margin-top:1px}
+
+/* ACTION BUTTONS */
+.btn{
+  height:36px;padding:0 16px;border:none;border-radius:var(--radius);
+  font-family:var(--font-body);font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--navy);color:white}
+.btn-primary:hover{background:var(--navy-light)}
+.btn-gold{background:var(--gold);color:var(--navy-dark)}
+.btn-gold:hover{background:var(--gold-light)}
+.btn-outline{background:white;color:var(--gray-700);border:1.5px solid var(--gray-200)}
+.btn-outline:hover{border-color:var(--navy);color:var(--navy)}
+.btn-danger{background:var(--red-pale);color:var(--red);border:1.5px solid #fecdd3}
+.btn-danger:hover{background:#fecdd3}
+.btn-green{background:#dcfce7;color:#15803d;border:1.5px solid #bbf7d0}
+.btn-green:hover{background:#bbf7d0}
+.btn-sm{height:28px;padding:0 10px;font-size:11px}
+
+/* PANEL ACTIONS BAR */
+.panel-actions{
+  display:flex;gap:8px;flex-wrap:wrap;
+  padding:12px 0;border-top:1px solid var(--gray-100);margin-top:16px;
+}
+
+/* REPORT PREVIEW */
+#preview-panel{background:var(--gray-50)}
+#report-body{background:white;border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:32px;box-shadow:var(--shadow)}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:20px;right:20px;z-index:500;
+  background:var(--navy-dark);color:white;
+  padding:10px 16px;border-radius:var(--radius-lg);
+  display:flex;align-items:center;gap:8px;
+  box-shadow:var(--shadow-lg);font-size:13px;font-weight:500;
+  transform:translateY(80px);opacity:0;transition:all .25s;pointer-events:none;
+  max-width:340px;
+}
+#toast.show{transform:translateY(0);opacity:1}
+#toast-icon{font-size:16px}
+
+/* PIN OVERLAY */
+.pin-overlay{
+  display:none;position:fixed;inset:0;z-index:600;
+  background:rgba(12,20,44,.95);backdrop-filter:blur(12px);
+  flex-direction:column;align-items:center;justify-content:center;
+}
+.pin-logo{
+  width:56px;height:56px;border-radius:16px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:800;color:var(--navy-dark);
+  font-family:'DM Serif Display',serif;margin-bottom:20px;
+}
+.pin-title{font-size:22px;font-weight:700;color:white;margin-bottom:4px;font-family:'DM Serif Display',serif}
+.pin-subtitle{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:24px;text-align:center}
+.pin-dots{display:flex;gap:12px;margin-bottom:8px}
+.pin-dot{
+  width:14px;height:14px;border-radius:50%;
+  background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.2);
+  transition:all .15s;
+}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold)}
+.pin-dot.error{background:var(--red);border-color:var(--red);animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.pin-error{height:20px;font-size:12px;color:#fca5a5;margin-bottom:12px;text-align:center}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:200px}
+.pk-btn{
+  height:52px;border-radius:10px;border:none;
+  background:rgba(255,255,255,.08);color:white;
+  font-size:20px;font-weight:600;font-family:var(--font-body);
+  cursor:pointer;transition:all .12s;
+}
+.pk-btn:hover{background:rgba(255,255,255,.15)}
+.pk-btn:active{transform:scale(.95)}
+.pk-btn-back{font-size:16px}
+.pk-btn-empty{background:transparent;pointer-events:none}
+.pin-actions{margin-top:16px;display:flex;gap:8px}
+.pin-link{
+  font-size:12px;color:rgba(255,255,255,.4);
+  background:none;border:none;cursor:pointer;text-decoration:underline;
+}
+.pin-link:hover{color:rgba(255,255,255,.7)}
+
+/* EXTRACTION OPTIONS */
+.tx-conditional{display:none;margin-top:10px}
+.tx-conditional.visible{display:block}
+
+/* REPORT INLINE STYLES */
+.r-section{font-size:12pt;font-weight:700;color:var(--navy);margin:14px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--gold)}
+.r-sub{font-size:11pt;font-weight:600;color:var(--gray-700);margin:10px 0 4px}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+.r-row{font-size:11pt;padding:2px 0}
+.r-row span{font-weight:600;color:var(--gray-600)}
+.r-full{grid-column:span 2}
+.r-italic{font-style:italic;border-left:3px solid var(--gold);padding-left:10px;color:var(--gray-700)}
+.report-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid var(--navy)}
+.report-clinic-name{font-size:14pt;font-weight:800;color:var(--navy);font-family:'DM Serif Display',serif}
+.report-clinic-sub{font-size:10pt;color:var(--gray-500)}
+.report-title{text-align:center;font-size:14pt;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--navy);margin:14px 0}
+.patient-box{background:var(--gray-50);border-radius:var(--radius);padding:12px 14px;margin:12px 0;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+.r-summary-box{background:var(--gold-pale);border-left:3px solid var(--gold);padding:10px 14px;font-style:italic;font-size:11pt;color:var(--gray-700);margin:10px 0;border-radius:0 6px 6px 0}
+.r-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.r-photo-item img{width:100%;height:110px;object-fit:cover;border-radius:6px}
+.r-photo-item p{font-size:9pt;color:var(--gray-500);text-align:center;margin-top:3px}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  :root{--sidebar-w:0px}
+  #sidebar{display:none}
+  .card-body.grid-2,.card-body.grid-3{grid-template-columns:1fr}
+  .field.span2,.field.span3{grid-column:span 1}
+  .photo-grid{grid-template-columns:repeat(2,1fr)}
+  .template-grid{grid-template-columns:1fr 1fr}
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- PIN SETUP OVERLAY -->
+<div class="pin-overlay" id="pin-overlay" style="display:flex">
+  <div class="pin-logo" style="font-size:22px">🦷</div>
+  <div class="pin-title">OrthoFlow</div>
+  <div class="pin-subtitle" id="pin-subtitle">Enter your PIN to access patient records</div>
+  <div class="pin-dots" id="pd-dots">
+    <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="pin-keypad">
+    <button class="pk-btn" onclick="pinKey('1')">1</button>
+    <button class="pk-btn" onclick="pinKey('2')">2</button>
+    <button class="pk-btn" onclick="pinKey('3')">3</button>
+    <button class="pk-btn" onclick="pinKey('4')">4</button>
+    <button class="pk-btn" onclick="pinKey('5')">5</button>
+    <button class="pk-btn" onclick="pinKey('6')">6</button>
+    <button class="pk-btn" onclick="pinKey('7')">7</button>
+    <button class="pk-btn" onclick="pinKey('8')">8</button>
+    <button class="pk-btn" onclick="pinKey('9')">9</button>
+    <div class="pk-btn pk-btn-empty"></div>
+    <button class="pk-btn" onclick="pinKey('0')">0</button>
+    <button class="pk-btn pk-btn-back" onclick="pinBackspace()">⌫</button>
+  </div>
+  <div class="pin-actions">
+    <button class="pin-link" onclick="startChangePin()">Change PIN</button>
+  </div>
+</div>
+
+<!-- LOCK OVERLAY -->
+<div class="pin-overlay" id="lock-overlay" style="display:none">
+  <div class="pin-logo">🔒</div>
+  <div class="pin-title">Session Locked</div>
+  <div class="pin-subtitle">Enter your PIN to continue</div>
+  <div class="pin-dots" id="lpd-dots">
+    <div class="pin-dot" id="lpd0"></div><div class="pin-dot" id="lpd1"></div>
+    <div class="pin-dot" id="lpd2"></div><div class="pin-dot" id="lpd3"></div>
+  </div>
+  <div class="pin-error" id="lock-error"></div>
+  <div class="pin-keypad">
+    <button class="pk-btn" onclick="lockKey('1')">1</button>
+    <button class="pk-btn" onclick="lockKey('2')">2</button>
+    <button class="pk-btn" onclick="lockKey('3')">3</button>
+    <button class="pk-btn" onclick="lockKey('4')">4</button>
+    <button class="pk-btn" onclick="lockKey('5')">5</button>
+    <button class="pk-btn" onclick="lockKey('6')">6</button>
+    <button class="pk-btn" onclick="lockKey('7')">7</button>
+    <button class="pk-btn" onclick="lockKey('8')">8</button>
+    <button class="pk-btn" onclick="lockKey('9')">9</button>
+    <div class="pk-btn pk-btn-empty"></div>
+    <button class="pk-btn" onclick="lockKey('0')">0</button>
+    <button class="pk-btn pk-btn-back" onclick="lockBackspace()">⌫</button>
+  </div>
+</div>
+
+<!-- TOOTH CHART MODAL -->
+<div class="modal-overlay" id="tooth-modal">
+  <div class="modal-box">
+    <div class="modal-title">🦷 Select Teeth for Extraction</div>
+    <div class="modal-sub">Click to select/deselect. Uses FDI (ISO 3950) notation.</div>
+    <div class="tooth-arch-label">Upper (Maxillary)</div>
+    <div class="tooth-row" id="upper-row"></div>
+    <div style="height:6px;border-left:1px dashed var(--gray-300);border-right:1px dashed var(--gray-300);width:80%;margin:0 auto"></div>
+    <div class="tooth-row" id="lower-row" style="margin-top:0"></div>
+    <div class="tooth-arch-label" style="margin-top:2px">Lower (Mandibular)</div>
+    <div style="margin:12px 0 4px;font-size:11px;font-weight:600;color:var(--gray-500)">Selected Teeth:</div>
+    <div id="selected-teeth-preview">None</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeToothChart()">Cancel</button>
+      <button class="btn btn-primary" onclick="applyToothSelection()">✓ Apply Selection</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOAD PATIENT MODAL -->
+<div class="modal-overlay" id="load-modal">
+  <div class="modal-box" style="max-width:640px">
+    <div class="modal-title">📂 Load Patient Record</div>
+    <div class="modal-sub">Select a saved record to load into the form.</div>
+    <div style="margin-bottom:10px">
+      <input type="text" id="search-records" placeholder="Search by name or record number…" oninput="filterRecords(this.value)">
+    </div>
+    <div id="records-list" style="max-height:400px;overflow-y:auto"></div>
+    <div class="modal-footer" style="margin-top:12px">
+      <button class="btn btn-outline" onclick="closeModal('load-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app">
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="brand">
+      <div class="brand-logo">OF</div>
+      <div class="brand-text">
+        <div class="brand-name">OrthoFlow</div>
+        <div class="brand-sub">Clinical Dashboard</div>
+      </div>
+    </div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-actions">
+      <button class="tb-btn tb-btn-ghost" onclick="newPatient()">＋ New Patient</button>
+      <button class="tb-btn tb-btn-ghost" onclick="savePatientDB()">💾 Save</button>
+      <button class="tb-btn tb-btn-ghost" onclick="openLoadModal()">📂 Load</button>
+      <button class="tb-btn tb-btn-ghost" onclick="showSection('preview')">📄 Preview</button>
+      <button class="tb-btn tb-btn-gold" onclick="generateReport()">Generate Report →</button>
+    </div>
+    <div class="topbar-sep"></div>
+    <div id="save-status">
+      <div class="dot"></div>
+      <span id="save-text">Unsaved</span>
+    </div>
+    <div class="progress-pill">
+      <svg class="progress-ring-wrap" viewBox="0 0 28 28" style="width:26px;height:26px">
+        <circle class="progress-ring-track" cx="14" cy="14" r="10.5"/>
+        <circle class="progress-ring-fill" id="progress-ring" cx="14" cy="14" r="10.5" stroke-dashoffset="65" transform="rotate(-90 14 14)"/>
+      </svg>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="topbar-sep"></div>
+    <button class="tb-btn tb-btn-ghost lock-btn" onclick="lockNow()">🔒</button>
+  </div>
+
+  <div id="body">
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div id="sidebar-header">
+        <div id="patient-pill" onclick="showSection('patient')">
+          <div class="pp-label">Current Patient</div>
+          <div class="pp-name" id="pp-name">New Patient</div>
+          <div class="pp-meta" id="pp-meta">No record loaded</div>
+        </div>
+      </div>
+      <nav id="sidebar-nav">
+        <div class="nav-group-label">Clinical</div>
+        <div class="nav-item active" id="nav-patient" onclick="showSection('patient')">
+          <div class="nav-icon">👤</div>
+          <div class="nav-label">Patient & History</div>
+          <div class="nav-dot" id="dot-patient"></div>
+        </div>
+        <div class="nav-item" id="nav-exam" onclick="showSection('exam')">
+          <div class="nav-icon">🔍</div>
+          <div class="nav-label">Examination</div>
+          <div class="nav-dot" id="dot-exam"></div>
+        </div>
+        <div class="nav-item" id="nav-diag" onclick="showSection('diag')">
+          <div class="nav-icon">📊</div>
+          <div class="nav-label">Diagnostics</div>
+          <div class="nav-dot" id="dot-diag"></div>
+        </div>
+        <div class="nav-item" id="nav-assess" onclick="showSection('assess')">
+          <div class="nav-icon">📋</div>
+          <div class="nav-label">Assessment</div>
+          <div class="nav-dot" id="dot-assess"></div>
+        </div>
+        <div class="nav-item" id="nav-plan" onclick="showSection('plan')">
+          <div class="nav-icon">🦷</div>
+          <div class="nav-label">Treatment Plan</div>
+          <div class="nav-dot" id="dot-plan"></div>
+        </div>
+        <div class="nav-item" id="nav-photos" onclick="showSection('photos')">
+          <div class="nav-icon">📷</div>
+          <div class="nav-label">Photos</div>
+          <div class="nav-dot" id="dot-photos"></div>
+        </div>
+        <div class="nav-group-label" style="margin-top:8px">Admin</div>
+        <div class="nav-item" id="nav-templates" onclick="showSection('templates')">
+          <div class="nav-icon">⚡</div>
+          <div class="nav-label">Quick Templates</div>
+        </div>
+        <div class="nav-item" id="nav-records" onclick="showSection('records')">
+          <div class="nav-icon">🗄️</div>
+          <div class="nav-label">Saved Records</div>
+        </div>
+        <div class="nav-item" id="nav-settings" onclick="showSection('settings')">
+          <div class="nav-icon">⚙️</div>
+          <div class="nav-label">Settings</div>
+        </div>
+        <div class="nav-item" id="nav-preview" onclick="showSection('preview')">
+          <div class="nav-icon">📄</div>
+          <div class="nav-label">Report Preview</div>
+        </div>
+      </nav>
+      <div id="sidebar-footer">
+        <div class="doc-card">
+          <div class="doc-name">Dr. Belal Abdelrahman</div>
+          <div class="doc-title">Specialist Orthodontist · D997</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main">
+
+      <!-- ════════════════════════ PATIENT & HISTORY ════════════════════════ -->
+      <div class="content-panel active" id="panel-patient">
+        <div class="panel-header">
+          <div class="panel-title">Patient & History</div>
+          <div class="panel-sub">Demographics, chief complaint, and medical history</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">👤</div><div class="card-title">Patient Demographics</div></div>
+          <div class="card-body grid-2">
+            <div class="field">
+              <label class="field-label">Full Name *</label>
+              <input type="text" id="pt-name" placeholder="Patient full name" oninput="autosave();updatePatientPill();updateDot('patient')">
+            </div>
+            <div class="field">
+              <label class="field-label">Record No.</label>
+              <input type="text" id="pt-record" placeholder="e.g. ORG-2025-001" oninput="autosave();updateDot('patient')">
+            </div>
+            <div class="field">
+              <label class="field-label">Date of Birth (DD/MM/YYYY)</label>
+              <div style="position:relative;display:flex;align-items:center">
+                <input type="text" id="pt-dob" placeholder="DD/MM/YYYY"
+                  style="padding-right:36px"
+                  oninput="formatDobInput(this);calcAge();autosave()">
+                <input type="date" id="pt-dob-picker" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none"
+                  onchange="syncDobFromPicker(this.value)">
+                <button type="button" title="Pick date from calendar"
+                  onclick="document.getElementById('pt-dob-picker').showPicker()"
+                  style="position:absolute;right:6px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--gray-400);padding:0;line-height:1;transition:color .15s"
+                  onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--gray-400)'">📅</button>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Age (auto-calculated)</label>
+              <input type="text" id="pt-age" placeholder="Auto from DOB" readonly style="background:var(--gray-50)">
+            </div>
+            <div class="field">
+              <label class="field-label">Gender *</label>
+              <select id="pt-gender" onchange="autosave();updateDot('patient');updateSummary()">
+                <option value="">— Select —</option>
+                <option>Male</option><option>Female</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Examination Date</label>
+              <input type="date" id="pt-date" onchange="validateExamDate();autosave();updateDot('patient')">
+            </div>
+            <div class="field span2">
+              <label class="field-label">Referred By</label>
+              <input type="text" id="pt-referral" placeholder="Referring dentist / self" oninput="autosave()">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">💬</div><div class="card-title">Chief Complaint</div></div>
+          <div class="card-body">
+            <div class="field">
+              <label class="field-label">Chief Complaint *</label>
+              <textarea id="cc" rows="3" placeholder="In patient's own words: what brings them in today?" oninput="autosave();updateDot('patient')"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">🏥</div><div class="card-title">Medical History</div></div>
+          <div class="card-body grid-2">
+            <div class="field">
+              <label class="field-label">Medical History</label>
+              <textarea id="med-history" rows="3" placeholder="Relevant conditions, medications, surgeries…" oninput="autosave();updateDot('patient')"></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">Allergies (NKDA if none)</label>
+              <textarea id="med-allergy" rows="3" placeholder="Drug or material allergies" oninput="autosave()"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ EXAMINATION ════════════════════════ -->
+      <div class="content-panel" id="panel-exam">
+        <div class="panel-header">
+          <div class="panel-title">Clinical Examination</div>
+          <div class="panel-sub">Extraoral, intraoral, and arch assessment</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">👁️</div><div class="card-title">Extraoral Examination</div></div>
+          <div class="card-body grid-3">
+            <div class="field">
+              <label class="field-label">Facial Profile *</label>
+              <select id="ex-profile" onchange="autosave();updateDot('exam')">
+                <option value="">— Select —</option>
+                <option>Straight</option><option>Convex</option><option>Concave</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Facial Symmetry *</label>
+              <select id="ex-sym" onchange="autosave();updateDot('exam')">
+                <option value="">— Select —</option>
+                <option>Symmetrical</option><option>Mild asymmetry</option><option>Moderate asymmetry</option><option>Severe asymmetry</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Lip Competence *</label>
+              <select id="ex-lips" onchange="autosave();updateDot('exam')">
+                <option value="">— Select —</option>
+                <option>Competent</option><option>Incompetent</option><option>Potentially competent</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Nasolabial Angle</label>
+              <select id="ex-naso" onchange="autosave()">
+                <option value="">— Select —</option>
+                <option>Normal (90–110°)</option><option>Acute (&lt;90°)</option><option>Obtuse (&gt;110°)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Mentolabial Fold</label>
+              <select id="ex-mento" onchange="autosave()">
+                <option value="">— Select —</option>
+                <option>Normal</option><option>Shallow</option><option>Deep</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">TMJ / Muscles</label>
+              <input type="text" id="ex-tmj" value="NAD" oninput="autosave()">
+            </div>
+            <div class="field span3">
+              <label class="field-label">Extraoral Notes</label>
+              <input type="text" id="ex-notes" placeholder="Additional extraoral findings…" oninput="autosave()">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">👄</div><div class="card-title">Intraoral Examination</div></div>
+          <div class="card-body">
+            <div class="card-body grid-2" style="padding:0">
+              <div class="field">
+                <label class="field-label">Oral Hygiene *</label>
+                <select id="in-hygiene" onchange="autosave();updateDot('exam')">
+                  <option value="">— Select —</option>
+                  <option>Good</option><option>Fair</option><option>Poor</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Dentition *</label>
+                <select id="in-dent" onchange="autosave();updateDot('exam')">
+                  <option value="">— Select —</option>
+                  <option>Permanent</option><option>Mixed – Early</option><option>Mixed – Late</option><option>Primary</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Upper Jaw (Maxilla)</div>
+              <div class="card-body grid-3" style="padding:0">
+                <div class="field">
+                  <label class="field-label">Arch Form</label>
+                  <select id="u-arch" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>Square</option><option>Ovoid</option><option>Tapered</option><option>V-shaped</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Malalignment</label>
+                  <select id="u-malalign" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>None</option><option>Mild</option><option>Moderate</option><option>Severe</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Crowding / Spacing</label>
+                  <select id="u-cs-type" onchange="autosave();updateSummary()">
+                    <option value="">— Select —</option>
+                    <option>None</option><option>Crowding</option><option>Spacing</option><option>Both</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Severity</label>
+                  <select id="u-cs-sev" onchange="autosave();updateSummary()">
+                    <option value="">— Select —</option>
+                    <option>Mild (&lt;4mm)</option><option>Moderate (4–8mm)</option><option>Severe (&gt;8mm)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Amount</label>
+                  <input type="text" id="u-cs-amt" placeholder="e.g. 5mm" oninput="autosave();updateSummary()">
+                </div>
+                <div class="field">
+                  <label class="field-label">Notes</label>
+                  <input type="text" id="u-notes" placeholder="Upper arch notes" oninput="autosave()">
+                </div>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Lower Jaw (Mandible)</div>
+              <div class="card-body grid-3" style="padding:0">
+                <div class="field">
+                  <label class="field-label">Arch Form</label>
+                  <select id="l-arch" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>Square</option><option>Ovoid</option><option>Tapered</option><option>V-shaped</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Malalignment</label>
+                  <select id="l-malalign" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>None</option><option>Mild</option><option>Moderate</option><option>Severe</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Crowding / Spacing</label>
+                  <select id="l-cs-type" onchange="autosave();updateSummary()">
+                    <option value="">— Select —</option>
+                    <option>None</option><option>Crowding</option><option>Spacing</option><option>Both</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Severity</label>
+                  <select id="l-cs-sev" onchange="autosave();updateSummary()">
+                    <option value="">— Select —</option>
+                    <option>Mild (&lt;4mm)</option><option>Moderate (4–8mm)</option><option>Severe (&gt;8mm)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Amount</label>
+                  <input type="text" id="l-cs-amt" placeholder="e.g. 4mm" oninput="autosave();updateSummary()">
+                </div>
+                <div class="field">
+                  <label class="field-label">Notes</label>
+                  <input type="text" id="l-notes" placeholder="Lower arch notes" oninput="autosave()">
+                </div>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Inter-Arch Relationships</div>
+              <div class="card-body grid-3" style="padding:0">
+                <div class="field">
+                  <label class="field-label">Molar Class Right *</label>
+                  <select id="in-molR" onchange="autosave();suggestDiagnosis();updateSummary();updateDot('exam')">
+                    <option value="">— Select —</option>
+                    <option>Class I</option><option>Class II Div 1</option><option>Class II Div 2</option><option>Class III</option><option>End-to-End</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Molar Class Left *</label>
+                  <select id="in-molL" onchange="autosave();suggestDiagnosis();updateSummary();updateDot('exam')">
+                    <option value="">— Select —</option>
+                    <option>Class I</option><option>Class II Div 1</option><option>Class II Div 2</option><option>Class III</option><option>End-to-End</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Canine Class Right</label>
+                  <select id="in-canR" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>Class I</option><option>Class II</option><option>Class III</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Canine Class Left</label>
+                  <select id="in-canL" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>Class I</option><option>Class II</option><option>Class III</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Overjet *</label>
+                  <input type="text" id="in-oj" placeholder="e.g. +4mm" oninput="autosave();updateSummary();updateDot('exam')">
+                </div>
+                <div class="field">
+                  <label class="field-label">Overbite *</label>
+                  <input type="text" id="in-ob" placeholder="e.g. 30%" oninput="autosave();updateDot('exam')">
+                </div>
+                <div class="field">
+                  <label class="field-label">Upper Midline</label>
+                  <input type="text" id="in-midU" placeholder="e.g. Coincident" oninput="autosave()">
+                </div>
+                <div class="field">
+                  <label class="field-label">Lower Midline</label>
+                  <input type="text" id="in-midL" placeholder="e.g. 2mm to the left" oninput="autosave()">
+                </div>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Antero-Posterior Anomalies</div>
+              <div class="check-group">
+                <label class="check-item"><input type="checkbox" id="ap-normal" onchange="autosave()"> Normal</label>
+                <label class="check-item"><input type="checkbox" id="ap-oj-inc" onchange="autosave();suggestDiagnosis()"> Increased Overjet</label>
+                <label class="check-item"><input type="checkbox" id="ap-oj-red" onchange="autosave()"> Reduced Overjet</label>
+                <label class="check-item"><input type="checkbox" id="ap-oj-rev" onchange="autosave();suggestDiagnosis()"> Reverse Overjet</label>
+                <label class="check-item"><input type="checkbox" id="ap-bimax" onchange="autosave()"> Bimaxillary Protrusion</label>
+                <label class="check-item"><input type="checkbox" id="ap-u-pro" onchange="autosave()"> Upper Proclined</label>
+                <label class="check-item"><input type="checkbox" id="ap-u-ret" onchange="autosave()"> Upper Retroclined</label>
+                <label class="check-item"><input type="checkbox" id="ap-l-pro" onchange="autosave()"> Lower Proclined</label>
+                <label class="check-item"><input type="checkbox" id="ap-l-ret" onchange="autosave()"> Lower Retroclined</label>
+              </div>
+              <input type="text" id="ap-note" placeholder="AP notes…" style="margin-top:8px" oninput="autosave()">
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Sagittal Anomalies</div>
+              <div class="check-group">
+                <label class="check-item"><input type="checkbox" id="sag-none" onchange="autosave()"> None</label>
+                <label class="check-item"><input type="checkbox" id="sag-ant" onchange="autosave();suggestDiagnosis()"> Anterior Crossbite</label>
+                <label class="check-item"><input type="checkbox" id="sag-post-r" onchange="autosave()"> Posterior Crossbite (R)</label>
+                <label class="check-item"><input type="checkbox" id="sag-post-l" onchange="autosave()"> Posterior Crossbite (L)</label>
+                <label class="check-item"><input type="checkbox" id="sag-bilat" onchange="autosave()"> Bilateral Posterior</label>
+                <label class="check-item"><input type="checkbox" id="sag-scissors" onchange="autosave()"> Scissors Bite</label>
+                <label class="check-item"><input type="checkbox" id="sag-edge" onchange="autosave()"> Edge-to-Edge</label>
+              </div>
+              <input type="text" id="sag-note" placeholder="Sagittal notes…" style="margin-top:8px" oninput="autosave()">
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Vertical Anomalies</div>
+              <div class="check-group">
+                <label class="check-item"><input type="checkbox" id="vert-normal" onchange="autosave()"> Normal</label>
+                <label class="check-item"><input type="checkbox" id="vert-deep" onchange="autosave();suggestDiagnosis()"> Deep Bite</label>
+                <label class="check-item"><input type="checkbox" id="vert-red" onchange="autosave()"> Reduced Overbite</label>
+                <label class="check-item"><input type="checkbox" id="vert-aob" onchange="autosave();suggestDiagnosis()"> Anterior Open Bite</label>
+                <label class="check-item"><input type="checkbox" id="vert-pob" onchange="autosave()"> Posterior Open Bite</label>
+                <label class="check-item"><input type="checkbox" id="vert-spee-deep" onchange="autosave()"> Deep Curve of Spee</label>
+                <label class="check-item"><input type="checkbox" id="vert-spee-rev" onchange="autosave()"> Reverse Curve of Spee</label>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:10px;align-items:flex-end;flex-wrap:wrap">
+                <div class="field" style="min-width:120px">
+                  <label class="field-label">MMPA (°)</label>
+                  <input type="text" id="l-mmpa" placeholder="e.g. 27°" oninput="autoClassifyMMPA();autosave();" onblur="appendDegreeMMPA()">
+                </div>
+                <div class="field" style="min-width:190px;flex:1">
+                  <label class="field-label" style="display:flex;align-items:center;gap:5px">
+                    Vertical Range
+                    <span id="vert-range-auto-badge" style="display:none;font-size:9px;padding:1px 6px;border-radius:10px;background:#dbeafe;color:#1d4ed8;font-weight:600;text-transform:uppercase;letter-spacing:.3px">auto</span>
+                  </label>
+                  <select id="vert-range" onchange="vertRangeManual=true;autosave()">
+                    <option value="">— Select Range —</option>
+                    <option>Low (Hypodivergent)</option>
+                    <option>Normal</option>
+                    <option>High (Hyperdivergent)</option>
+                  </select>
+                </div>
+                <div class="field" style="flex:2;min-width:180px">
+                  <label class="field-label">Vertical Notes</label>
+                  <input type="text" id="vert-note" placeholder="Vertical notes…" oninput="autosave()">
+                </div>
+              </div>
+            </div>
+            <div class="field" style="margin-top:10px">
+              <label class="field-label">Inter-Arch Notes</label>
+              <textarea id="in-notes" rows="2" oninput="autosave()"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ DIAGNOSTICS ════════════════════════ -->
+      <div class="content-panel" id="panel-diag">
+        <div class="panel-header">
+          <div class="panel-title">Diagnostics</div>
+          <div class="panel-sub">Growth status, radiographic analysis, and IOTN</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">📈</div><div class="card-title">Growth Status</div></div>
+          <div class="card-body grid-2">
+            <div class="field">
+              <label class="field-label">CVM Stage *</label>
+              <input type="text" id="gr-cvm" placeholder="Auto-filled from age or enter manually" oninput="autosave();updateDot('diag');updateSummary()">
+            </div>
+            <div class="field">
+              <label class="field-label">Skeletal Maturity</label>
+              <input type="text" id="gr-maturity" placeholder="e.g. Growing – High potential" oninput="autosave()">
+            </div>
+            <div class="field">
+              <label class="field-label">Age Group</label>
+              <input type="text" id="gr-agegroup" placeholder="e.g. Mid adolescent (14–16)" oninput="autosave()">
+            </div>
+            <div class="field">
+              <label class="field-label">Growth Notes</label>
+              <input type="text" id="gr-notes" placeholder="Additional growth observations" oninput="autosave()">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">🩻</div><div class="card-title">Radiographic Findings</div></div>
+          <div class="card-body grid-2">
+            <div class="field">
+              <label class="field-label">Panoramic X-ray</label>
+              <input type="text" id="rx-pan" placeholder="Panoramic findings" oninput="autosave()">
+            </div>
+            <div class="field">
+              <label class="field-label">Cephalometric X-ray</label>
+              <input type="text" id="rx-ceph" placeholder="Cephalometric findings" oninput="autosave()">
+            </div>
+            <div class="field">
+              <label class="field-label">SNA (°)</label>
+              <input type="text" id="rx-sna" placeholder="e.g. 82°" oninput="autosave();validateAngle(this)" onblur="appendUnit(this,'°');calcANB()">
+            </div>
+            <div class="field">
+              <label class="field-label">SNB (°)</label>
+              <input type="text" id="rx-snb" placeholder="e.g. 80°" oninput="autosave();validateAngle(this)" onblur="appendUnit(this,'°');calcANB()">
+            </div>
+            <div class="field">
+              <label class="field-label">ANB (auto-calculated)</label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="text" id="rx-anb" readonly style="background:var(--gray-50);flex:1">
+                <span class="anb-chip" id="anb-chip"></span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Wits Appraisal</label>
+              <input type="text" id="rx-wits" placeholder="e.g. +2mm" oninput="autosave()" onblur="appendUnit(this,'mm')">
+            </div>
+            <div class="field span2">
+              <label class="field-label">Radiographic Notes</label>
+              <textarea id="rx-notes" rows="2" oninput="autosave()"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">📐</div><div class="card-title">IOTN — Index of Orthodontic Treatment Need</div></div>
+          <div class="card-body grid-3">
+            <div class="field">
+              <label class="field-label">DHC Grade *</label>
+              <select id="iotn-dhc" onchange="autosave();updateDot('diag');updateSummary()">
+                <option value="">— Select —</option>
+                <option>Grade 1 – None</option>
+                <option>Grade 2 – Little</option>
+                <option>Grade 3 – Moderate</option>
+                <option>Grade 4 – Great</option>
+                <option>Grade 5 – Very great</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">AC Score *</label>
+              <select id="iotn-ac" onchange="autosave();updateDot('diag')">
+                <option value="">— Select —</option>
+                <option>1</option><option>2</option><option>3</option><option>4</option>
+                <option>5</option><option>6</option><option>7</option><option>8</option>
+                <option>9</option><option>10</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">IOTN Notes</label>
+              <input type="text" id="iotn-notes" placeholder="Optional notes" oninput="autosave()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ ASSESSMENT ════════════════════════ -->
+      <div class="content-panel" id="panel-assess">
+        <div class="panel-header">
+          <div class="panel-title">Assessment & Diagnosis</div>
+          <div class="panel-sub">ICD-10 diagnosis codes and clinical problem list</div>
+        </div>
+
+        <div id="diag-suggestions-wrap" style="display:none;margin-bottom:16px">
+          <div class="diag-sug-header">⚡ AI Diagnosis Suggestions</div>
+          <div id="diag-conflict-warn"></div>
+          <div id="diag-sug-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">📋</div><div class="card-title">Diagnosis</div></div>
+          <div class="card-body">
+            <div class="card-body grid-2" style="padding:0">
+              <div class="field">
+                <label class="field-label">Primary Diagnosis (ICD-10) *</label>
+                <select id="diag-primary" onchange="autosave();updateDot('assess')">
+                  <option value="">— Select or enter ICD-10 —</option>
+                  <option>K07.21 – Malocclusion, Angle's Class I</option>
+                  <option>K07.22 – Malocclusion, Angle's Class II</option>
+                  <option>K07.23 – Malocclusion, Angle's Class III</option>
+                  <option>K07.31 – Crowding of teeth</option>
+                  <option>K07.32 – Excessive spacing of teeth</option>
+                  <option>K07.20 – Anterior open bite</option>
+                  <option>K07.24 – Deep bite (overbite)</option>
+                  <option>K07.51 – Class II skeletal pattern</option>
+                  <option>K07.52 – Class III skeletal pattern</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Secondary Diagnosis</label>
+                <select id="diag-secondary" onchange="autosave()">
+                  <option value="">— Optional —</option>
+                  <option>K07.21 – Malocclusion, Angle's Class I</option>
+                  <option>K07.22 – Malocclusion, Angle's Class II</option>
+                  <option>K07.23 – Malocclusion, Angle's Class III</option>
+                  <option>K07.31 – Crowding of teeth</option>
+                  <option>K07.32 – Excessive spacing of teeth</option>
+                  <option>K07.20 – Anterior open bite</option>
+                  <option>K07.24 – Deep bite (overbite)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Tertiary Diagnosis</label>
+                <select id="diag-tertiary" onchange="autosave()">
+                  <option value="">— Optional —</option>
+                  <option>K07.31 – Crowding of teeth</option>
+                  <option>K07.32 – Excessive spacing of teeth</option>
+                  <option>K07.20 – Anterior open bite</option>
+                  <option>K07.24 – Deep bite (overbite)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Clinical Description *</label>
+                <textarea id="diag-notes" rows="3" placeholder="Describe the malocclusion in clinical terms…" oninput="autosave();updateDot('assess')"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ TREATMENT PLAN ════════════════════════ -->
+      <div class="content-panel" id="panel-plan">
+        <div class="panel-header">
+          <div class="panel-title">Treatment Plan</div>
+          <div class="panel-sub">Appliance selection, extractions, mechanics, and retention</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">🦷</div><div class="card-title">Appliance & Mechanics</div></div>
+          <div class="card-body">
+            <div class="field">
+              <label class="field-label">Appliance Type *</label>
+              <div class="radio-group">
+                <label class="check-item radio-item"><input type="radio" name="tx-appl" value="Fixed Appliance" onchange="toggleAppliance();autosave();updateDot('plan')"> Fixed Appliance</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-appl" value="Clear Aligner (Invisalign)" onchange="toggleAppliance();autosave();updateDot('plan')"> Clear Aligner</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-appl" value="Both (Fixed + Aligner)" onchange="toggleAppliance();autosave();updateDot('plan')"> Both</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-appl" value="Removable Appliance" onchange="toggleAppliance();autosave();updateDot('plan')"> Removable</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-appl" value="Functional Appliance" onchange="toggleAppliance();autosave();updateDot('plan')"> Functional Only</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-appl" value="Functional + Fixed (Conjunction)" onchange="toggleAppliance();autosave();updateDot('plan')"> Functional + Fixed</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-appl" value="Two-Stage: Functional → Fixed" onchange="toggleAppliance();autosave();updateDot('plan')"> Two-Stage Treatment</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-appl" value="Observation Only" onchange="toggleAppliance();autosave();updateDot('plan')"> Observation Only</label>
+              </div>
+            </div>
+
+            <div class="tx-conditional" id="fixed-options">
+              <div class="card-body grid-3" style="padding:0;margin-top:8px">
+                <div class="field">
+                  <label class="field-label">Bracket System</label>
+                  <select id="tx-rx" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>MBT</option><option>Roth</option><option>Alexander</option><option>Andrews</option><option>Self-ligating</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Slot Size</label>
+                  <select id="tx-slot" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>0.018"</option><option>0.022"</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Level</label>
+                  <select id="tx-level" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>Full fixed</option><option>Upper only</option><option>Lower only</option><option>Segmental</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="tx-conditional" id="aligner-options">
+              <div class="card-body grid-3" style="padding:0;margin-top:8px">
+                <div class="field">
+                  <label class="field-label">Aligner Brand</label>
+                  <select id="tx-aligner" onchange="autosave()">
+                    <option value="">— Select —</option>
+                    <option>Invisalign Comprehensive</option><option>Invisalign Lite</option><option>Spark</option><option>SureSmile</option><option>Other</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Planned Aligners</label>
+                  <input type="text" id="tx-aligner-count" placeholder="e.g. 24 aligners" oninput="autosave()">
+                </div>
+                <div class="field">
+                  <label class="field-label">Refinements</label>
+                  <input type="text" id="tx-refinements" placeholder="e.g. 1 planned" oninput="autosave()">
+                </div>
+              </div>
+            </div>
+
+            <div class="tx-conditional" id="functional-options">
+              <div style="margin-top:10px;padding:12px;background:var(--gold-pale);border:1px solid #e9d5a0;border-radius:var(--radius-lg)">
+                <div class="subsec-title" style="color:var(--gold);margin-bottom:10px">Functional Appliance Details</div>
+                <div class="card-body grid-3" style="padding:0">
+                  <div class="field">
+                    <label class="field-label">Functional Appliance Type</label>
+                    <select id="tx-functional-type" onchange="autosave()">
+                      <option value="">— Select —</option>
+                      <option>Twin Block</option>
+                      <option>Clark Twin Block</option>
+                      <option>TwinForce</option>
+                      <option>Herbst</option>
+                      <option>Bionator</option>
+                      <option>Frankel (FR)</option>
+                      <option>Bass Appliance</option>
+                      <option>Other Functional</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Stage / Approach</label>
+                    <select id="tx-functional-stage" onchange="toggleFunctionalStage();autosave()">
+                      <option value="">— Select —</option>
+                      <option>Functional alone</option>
+                      <option>Functional + expander concurrently</option>
+                      <option>Stage 1: Functional only → Stage 2: Fixed</option>
+                      <option>Stage 1: Functional + expander → Stage 2: Fixed</option>
+                      <option>Stage 1: Expander only → Stage 2: Fixed</option>
+                      <option>Stage 1: Fixed → Stage 2: Functional</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Functional Notes</label>
+                    <input type="text" id="tx-functional-notes" placeholder="e.g. 6–9 months phase 1" oninput="autosave()">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Expanders</div>
+              <div class="radio-group">
+                <label class="check-item radio-item"><input type="radio" name="tx-exp" value="None" onchange="autosave()"> None</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-exp" value="RPE" onchange="autosave()"> RPE</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-exp" value="Hyrax" onchange="autosave()"> Hyrax</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-exp" value="McNamara" onchange="autosave()"> McNamara</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-exp" value="Quad Helix" onchange="autosave()"> Quad Helix</label>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Anchorage</div>
+              <div class="check-group">
+                <label class="check-item"><input type="checkbox" id="anc-none" onchange="autosave()"> None</label>
+                <label class="check-item"><input type="checkbox" id="anc-tads" onchange="autosave()"> TADs</label>
+                <label class="check-item"><input type="checkbox" id="anc-plates" onchange="autosave()"> Anchorage Plates</label>
+                <label class="check-item"><input type="checkbox" id="anc-tpa" onchange="autosave()"> TPA</label>
+                <label class="check-item"><input type="checkbox" id="anc-nance" onchange="autosave()"> Nance Appliance</label>
+                <label class="check-item"><input type="checkbox" id="anc-lingual" onchange="autosave()"> Lingual Arch</label>
+                <label class="check-item"><input type="checkbox" id="anc-headgear" onchange="autosave()"> Headgear</label>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Extractions</div>
+              <div class="radio-group" style="margin-bottom:8px">
+                <label class="check-item radio-item"><input type="radio" name="tx-ext" value="Non-Extraction" onchange="toggleExtraction();autosave()"> Non-Extraction</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-ext" value="Extraction" onchange="toggleExtraction();autosave()"> Extraction</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-ext" value="Pending Cephalometric" onchange="toggleExtraction();autosave()"> Pending Ceph</label>
+              </div>
+              <div class="tx-conditional" id="extraction-options">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                  <input type="text" id="tx-ext-teeth" placeholder="Teeth to extract (FDI)" style="flex:1;min-width:200px" oninput="autosave()">
+                  <button class="btn btn-outline" onclick="openToothChart()" style="flex-shrink:0">🦷 Tooth Chart</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Disarticulation</div>
+              <div class="radio-group">
+                <label class="check-item radio-item"><input type="radio" name="tx-disart" value="Not required" onchange="autosave()"> Not required</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-disart" value="Bite turbos" onchange="autosave()"> Bite Turbos</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-disart" value="Bite plate" onchange="autosave()"> Bite Plate</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-disart" value="Glass ionomer build-up" onchange="autosave()"> GI Build-up</label>
+              </div>
+            </div>
+
+            <div class="subsec">
+              <div class="subsec-title">Elastics</div>
+              <div class="check-group">
+                <label class="check-item"><input type="checkbox" id="tx-el-none" onchange="autosave()"> None</label>
+                <label class="check-item"><input type="checkbox" id="tx-el-c2" onchange="autosave()"> Class II</label>
+                <label class="check-item"><input type="checkbox" id="tx-el-c3" onchange="autosave()"> Class III</label>
+                <label class="check-item"><input type="checkbox" id="tx-el-vert" onchange="autosave()"> Vertical</label>
+                <label class="check-item"><input type="checkbox" id="tx-el-tri" onchange="autosave()"> Triangular</label>
+                <label class="check-item"><input type="checkbox" id="tx-el-box" onchange="autosave()"> Box</label>
+                <label class="check-item"><input type="checkbox" id="tx-el-cross" onchange="autosave()"> Cross</label>
+                <label class="check-item"><input type="checkbox" id="tx-el-other" onchange="autosave()"> Other</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">⏱️</div><div class="card-title">Duration & Retention</div></div>
+          <div class="card-body grid-2">
+            <div class="field">
+              <label class="field-label">Estimated Duration</label>
+              <select id="pl-dur" onchange="autosave()">
+                <option value="">— Select —</option>
+                <option>Up to 6 months</option><option>6–12 months</option>
+                <option>12–18 months</option><option>18–24 months</option><option>More than 24 months</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Retention Type</label>
+              <div class="radio-group" style="margin-top:4px">
+                <label class="check-item radio-item"><input type="radio" name="tx-ret" value="Fixed Lingual Wire" onchange="autosave()"> Fixed Lingual Wire</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-ret" value="Removable – Hawley" onchange="autosave()"> Hawley</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-ret" value="Removable – Essix" onchange="autosave()"> Essix</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-ret" value="Lingual Wire + Hawley" onchange="autosave()"> Wire + Hawley</label>
+                <label class="check-item radio-item"><input type="radio" name="tx-ret" value="Lingual Wire + Essix" onchange="autosave()"> Wire + Essix</label>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Retention Details</label>
+              <input type="text" id="pl-ret" placeholder="e.g. Fixed lower 3-3 + upper Essix" oninput="autosave()">
+            </div>
+            <div class="field">
+              <label class="field-label">Additional Notes</label>
+              <textarea id="pl-notes" rows="3" placeholder="Any other treatment instructions…" oninput="autosave()"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-box">
+          <div class="summary-label">✨ Auto Clinical Summary</div>
+          <p id="summary-text" class="empty">Fill in patient details, molar class, overjet, and ANB to generate the clinical summary.</p>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ PHOTOS ════════════════════════ -->
+      <div class="content-panel" id="panel-photos">
+        <div class="panel-header">
+          <div class="panel-title">Clinical Photographs</div>
+          <div class="panel-sub">Upload photos for inclusion in the report (stored locally, never uploaded)</div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="photo-grid">
+              <div class="photo-slot" id="pslot-frontal">
+                <div class="photo-slot-label">Frontal View</div>
+                <img id="pthumb-frontal" class="photo-thumb" style="display:none" alt="Frontal">
+                <button class="photo-btn" onclick="PhotoManager.trigger('frontal')">📷 Add Photo</button>
+                <input type="file" id="pfile-frontal" accept="image/*" onchange="PhotoManager.load(this,'frontal')">
+                <button class="photo-remove" id="premove-frontal" onclick="PhotoManager.remove('frontal')">✕ Remove</button>
+              </div>
+              <div class="photo-slot" id="pslot-profile">
+                <div class="photo-slot-label">Profile</div>
+                <img id="pthumb-profile" class="photo-thumb" style="display:none" alt="Profile">
+                <button class="photo-btn" onclick="PhotoManager.trigger('profile')">📷 Add Photo</button>
+                <input type="file" id="pfile-profile" accept="image/*" onchange="PhotoManager.load(this,'profile')">
+                <button class="photo-remove" id="premove-profile" onclick="PhotoManager.remove('profile')">✕ Remove</button>
+              </div>
+              <div class="photo-slot" id="pslot-smile">
+                <div class="photo-slot-label">Smile / Social</div>
+                <img id="pthumb-smile" class="photo-thumb" style="display:none" alt="Smile">
+                <button class="photo-btn" onclick="PhotoManager.trigger('smile')">📷 Add Photo</button>
+                <input type="file" id="pfile-smile" accept="image/*" onchange="PhotoManager.load(this,'smile')">
+                <button class="photo-remove" id="premove-smile" onclick="PhotoManager.remove('smile')">✕ Remove</button>
+              </div>
+              <div class="photo-slot" id="pslot-upper">
+                <div class="photo-slot-label">Upper Occlusal</div>
+                <img id="pthumb-upper" class="photo-thumb" style="display:none" alt="Upper">
+                <button class="photo-btn" onclick="PhotoManager.trigger('upper')">📷 Add Photo</button>
+                <input type="file" id="pfile-upper" accept="image/*" onchange="PhotoManager.load(this,'upper')">
+                <button class="photo-remove" id="premove-upper" onclick="PhotoManager.remove('upper')">✕ Remove</button>
+              </div>
+              <div class="photo-slot" id="pslot-lower">
+                <div class="photo-slot-label">Lower Occlusal</div>
+                <img id="pthumb-lower" class="photo-thumb" style="display:none" alt="Lower">
+                <button class="photo-btn" onclick="PhotoManager.trigger('lower')">📷 Add Photo</button>
+                <input type="file" id="pfile-lower" accept="image/*" onchange="PhotoManager.load(this,'lower')">
+                <button class="photo-remove" id="premove-lower" onclick="PhotoManager.remove('lower')">✕ Remove</button>
+              </div>
+              <div class="photo-slot" id="pslot-buccalLeft">
+                <div class="photo-slot-label">Buccal View Left</div>
+                <img id="pthumb-buccalLeft" class="photo-thumb" style="display:none" alt="Buccal Left">
+                <button class="photo-btn" onclick="PhotoManager.trigger('buccalLeft')">📷 Add Photo</button>
+                <input type="file" id="pfile-buccalLeft" accept="image/*" onchange="PhotoManager.load(this,'buccalLeft')">
+                <button class="photo-remove" id="premove-buccalLeft" onclick="PhotoManager.remove('buccalLeft')">✕ Remove</button>
+              </div>
+              <div class="photo-slot" id="pslot-buccalRight">
+                <div class="photo-slot-label">Buccal View Right</div>
+                <img id="pthumb-buccalRight" class="photo-thumb" style="display:none" alt="Buccal Right">
+                <button class="photo-btn" onclick="PhotoManager.trigger('buccalRight')">📷 Add Photo</button>
+                <input type="file" id="pfile-buccalRight" accept="image/*" onchange="PhotoManager.load(this,'buccalRight')">
+                <button class="photo-remove" id="premove-buccalRight" onclick="PhotoManager.remove('buccalRight')">✕ Remove</button>
+              </div>
+              <div class="photo-slot" id="pslot-opg">
+                <div class="photo-slot-label">OPG</div>
+                <img id="pthumb-opg" class="photo-thumb" style="display:none" alt="OPG">
+                <button class="photo-btn" onclick="PhotoManager.trigger('opg')">📷 Add Photo</button>
+                <input type="file" id="pfile-opg" accept="image/*" onchange="PhotoManager.load(this,'opg')">
+                <button class="photo-remove" id="premove-opg" onclick="PhotoManager.remove('opg')">✕ Remove</button>
+              </div>
+              <div class="photo-slot" id="pslot-ceph">
+                <div class="photo-slot-label">Cephalometric X-ray</div>
+                <img id="pthumb-ceph" class="photo-thumb" style="display:none" alt="Ceph">
+                <button class="photo-btn" onclick="PhotoManager.trigger('ceph')">📷 Add Photo</button>
+                <input type="file" id="pfile-ceph" accept="image/*" onchange="PhotoManager.load(this,'ceph')">
+                <button class="photo-remove" id="premove-ceph" onclick="PhotoManager.remove('ceph')">✕ Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ TEMPLATES ════════════════════════ -->
+      <div class="content-panel" id="panel-templates">
+        <div class="panel-header">
+          <div class="panel-title">Quick Templates</div>
+          <div class="panel-sub">Pre-fill common case patterns. Patient details remain blank.</div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="template-grid">
+              <div class="template-card" onclick="applyTemplate('classI')">
+                <div class="tc-icon">1️⃣</div>
+                <div class="tc-name">Class I Crowding</div>
+                <div class="tc-desc">Moderate crowding, normal ANB, fixed appliance plan</div>
+              </div>
+              <div class="template-card" onclick="applyTemplate('classII')">
+                <div class="tc-icon">2️⃣</div>
+                <div class="tc-name">Class II Deep Bite</div>
+                <div class="tc-desc">Cl II molar, increased OJ/OB, skeletal Class II</div>
+              </div>
+              <div class="template-card" onclick="applyTemplate('classIII')">
+                <div class="tc-icon">3️⃣</div>
+                <div class="tc-name">Class III Pattern</div>
+                <div class="tc-desc">Cl III molar, reverse OJ, skeletal Class III</div>
+              </div>
+              <div class="template-card" onclick="applyTemplate('openBite')">
+                <div class="tc-icon">↕️</div>
+                <div class="tc-name">Anterior Open Bite</div>
+                <div class="tc-desc">AOB, high MMPA, vertical growth pattern</div>
+              </div>
+              <div class="template-card" onclick="applyTemplate('bimaxillary')">
+                <div class="tc-icon">🔄</div>
+                <div class="tc-name">Bimaxillary Protrusion</div>
+                <div class="tc-desc">Proclined incisors, Class I, extraction planned</div>
+              </div>
+              <div class="template-card" onclick="applyTemplate('alignerClassI')">
+                <div class="tc-icon">✨</div>
+                <div class="tc-name">Aligner – Mild Case</div>
+                <div class="tc-desc">Class I, mild crowding, Invisalign Lite plan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ SAVED RECORDS ════════════════════════ -->
+      <div class="content-panel" id="panel-records">
+        <div class="panel-header">
+          <div class="panel-title">Saved Records</div>
+          <div class="panel-sub">Multi-patient database stored locally in your browser</div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+              <input type="text" id="search-records-page" placeholder="Search records…" style="flex:1;min-width:200px" oninput="renderRecordsPage(this.value)">
+            </div>
+            <div id="records-page-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ SETTINGS ════════════════════════ -->
+      <div class="content-panel" id="panel-settings">
+        <div class="panel-header">
+          <div class="panel-title">Settings</div>
+          <div class="panel-sub">Security, data management, and clinic information</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">🔒</div><div class="card-title">PIN Security</div></div>
+          <div class="card-body">
+            <div class="settings-section">
+              <div class="settings-row">
+                <div><div class="sr-label">Change PIN</div><div class="sr-sub">Currently using a 4-digit PIN. Default is 1234.</div></div>
+                <button class="btn btn-outline" onclick="changePinFromSettings()">Change PIN</button>
+              </div>
+              <div class="settings-row">
+                <div><div class="sr-label">Auto-lock Timeout</div><div class="sr-sub">Application locks after 5 minutes of inactivity</div></div>
+                <span style="font-size:12px;color:var(--gray-500)">5 minutes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">💾</div><div class="card-title">Data Backup</div></div>
+          <div class="card-body">
+            <div class="settings-section">
+              <div class="settings-row">
+                <div><div class="sr-label">Export Database (JSON)</div><div class="sr-sub">Download all saved patient records as a single JSON file</div></div>
+                <button class="btn btn-green" onclick="exportDB()">⬇ Export JSON</button>
+              </div>
+              <div class="settings-row">
+                <div><div class="sr-label">Import Database (JSON)</div><div class="sr-sub">Restore records from a previously exported backup</div></div>
+                <div>
+                  <input type="file" id="import-file" accept=".json" onchange="importDB(this)" style="display:none">
+                  <button class="btn btn-outline" onclick="document.getElementById('import-file').click()">⬆ Import JSON</button>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div><div class="sr-label">Export All Patients CSV</div><div class="sr-sub">Export every field of every saved patient as a spreadsheet</div></div>
+                <button class="btn btn-outline" onclick="exportCSV()">📊 Export CSV</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-icon">🏥</div><div class="card-title">Clinic Information</div></div>
+          <div class="card-body grid-2">
+            <div class="field span2">
+              <label class="field-label">Clinic Name</label>
+              <input type="text" id="set-clinic-name" value="Ibdaa Clinic for Orthognathic Surgery" oninput="saveSettings()">
+            </div>
+            <div class="field">
+              <label class="field-label">Doctor Name</label>
+              <input type="text" id="set-doc-name" value="Dr. Belal Abdelrahman" oninput="saveSettings()">
+            </div>
+            <div class="field">
+              <label class="field-label">License / Credentials</label>
+              <input type="text" id="set-doc-creds" value="Specialist Orthodontist · License D997" oninput="saveSettings()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ REPORT PREVIEW ════════════════════════ -->
+      <div class="content-panel" id="panel-preview">
+        <div class="panel-header">
+          <div class="panel-title">Report Preview</div>
+          <div class="panel-sub">Review before printing or exporting</div>
+        </div>
+        <div class="report-actions">
+          <button class="btn btn-outline" onclick="showSection('patient')">← Back to Form</button>
+          <button class="btn btn-primary" onclick="generateReport()">🔄 Regenerate</button>
+          <button class="btn btn-outline" onclick="savePatientDB()">💾 Save Patient</button>
+          <button class="btn btn-gold" onclick="savePDF()">📄 PDF</button>
+          <button class="btn btn-outline" onclick="saveWord()">📝 Word</button>
+          <button class="btn btn-outline" onclick="doPrint()">🖨 Print</button>
+        </div>
+        <div id="report-body" class="card"><div style="padding:32px;color:var(--gray-400);text-align:center">Generate the report to see a preview.</div></div>
+      </div>
+
+    </div><!-- end #main -->
+  </div><!-- end #body -->
+</div><!-- end #app -->
+
+<!-- TOAST -->
+<div id="toast"><span id="toast-icon">✅</span><span id="toast-msg">Saved</span></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   OrthoFlow — Module Pattern Architecture
+   ─────────────────────────────────────────────────────
+   PinSystem      — btoa PIN security
+   LockSystem     — Auto-lock overlay
+   AutoSave       — Debounced localStorage autosave
+   DiagnosisEngine — ICD-10 weighted scoring
+   PhotoManager   — Base64 photo storage
+   ToothChart     — FDI selection modal
+   DB             — Multi-patient CRUD (ortho_db)
+   Report         — generateReport, PDF, Word, Print
+══════════════════════════════════════════════════════ */
+
+const LOCK_TIME = 5 * 60 * 1000;
+let inactivityTimer;
+
+/* ── FIELDS ── */
+const FIELDS = ['pt-name','pt-record','pt-dob','pt-age','pt-gender','pt-date','pt-referral','cc','med-history','med-allergy','ex-profile','ex-sym','ex-lips','ex-naso','ex-mento','ex-tmj','ex-notes','in-hygiene','in-dent','u-arch','u-malalign','u-cs-type','u-cs-sev','u-cs-amt','u-notes','l-arch','l-malalign','l-cs-type','l-cs-sev','l-cs-amt','l-notes','in-molR','in-molL','in-canR','in-canL','in-oj','in-ob','in-midU','in-midL','ap-note','sag-note','l-mmpa','vert-note','vert-range','in-notes','rx-pan','rx-ceph','rx-sna','rx-snb','rx-anb','rx-wits','rx-notes','iotn-dhc','iotn-ac','iotn-notes','diag-primary','diag-secondary','diag-tertiary','diag-notes','tx-rx','tx-slot','tx-level','tx-aligner','tx-aligner-count','tx-refinements','tx-functional-type','tx-functional-stage','tx-functional-notes','tx-ext-teeth','pl-dur','pl-ret','pl-notes','gr-cvm','gr-maturity','gr-agegroup','gr-notes'];
+const RADIOS = ['tx-appl','tx-exp','tx-ext','tx-disart','tx-ret'];
+const CHECKS = ['ap-normal','ap-oj-inc','ap-oj-red','ap-oj-rev','ap-bimax','ap-u-pro','ap-u-ret','ap-l-pro','ap-l-ret','sag-none','sag-ant','sag-post-r','sag-post-l','sag-bilat','sag-scissors','sag-edge','vert-normal','vert-deep','vert-red','vert-aob','vert-pob','vert-spee-deep','vert-spee-rev','tx-el-none','tx-el-c2','tx-el-c3','tx-el-vert','tx-el-tri','tx-el-box','tx-el-cross','tx-el-other','anc-none','anc-tads','anc-plates','anc-tpa','anc-nance','anc-lingual','anc-headgear'];
+
+/* ── SECTION NAVIGATION ── */
+let currentSection = 'patient';
+function showSection(name) {
+  document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  if (panel) panel.classList.add('active');
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  currentSection = name;
+  document.getElementById('main').scrollTop = 0;
+  if (name === 'records') renderRecordsPage('');
+}
+
+/* ── PIN SYSTEM ── */
+const PinSystem = {
+  buffer: '',
+  mode: 'unlock',
+  newBuffer: '',
+  DEFAULT_HASH: 'MTIzNA==',
+  hashPin(pin) { return btoa(pin); },
+  getHash() { return localStorage.getItem('ortho_pin_hash') || this.DEFAULT_HASH; },
+  savePin(pin) { localStorage.setItem('ortho_pin_hash', this.hashPin(pin)); localStorage.setItem('ortho_pin_changed','1'); },
+  isDefault() { return this.getHash() === this.DEFAULT_HASH; },
+  key(d) {
+    if (this.buffer.length >= 4) return;
+    this.buffer += d; updatePinDots('pd', this.buffer.length);
+    if (this.buffer.length === 4) {
+      if (this.mode === 'unlock') this.check();
+      else if (this.mode === 'new') { this.newBuffer = this.buffer; this.buffer = ''; this.mode = 'confirm'; document.getElementById('pin-subtitle').textContent = 'Confirm new PIN'; clearPinDots('pd'); }
+      else if (this.mode === 'confirm') this.confirmNew();
+    }
+  },
+  backspace() { if (this.buffer.length > 0) { this.buffer = this.buffer.slice(0,-1); updatePinDots('pd', this.buffer.length); } },
+  check() {
+    if (this.hashPin(this.buffer) === this.getHash()) {
+      document.getElementById('pin-overlay').style.display = 'none';
+      document.getElementById('pin-error').textContent = '';
+      this.buffer = ''; resetInactivityTimer();
+      if (this.isDefault() && !localStorage.getItem('ortho_pin_changed'))
+        setTimeout(() => showToast('Default PIN is 1234 — change it in Settings', '🔒', 4500), 500);
+    } else {
+      document.getElementById('pin-error').textContent = 'Incorrect PIN. Try again.';
+      shakeDots('pd'); this.buffer = ''; setTimeout(() => clearPinDots('pd'), 400);
+    }
+  },
+  startChange() { this.mode = 'new'; this.buffer = ''; document.getElementById('pin-subtitle').textContent = 'Enter your NEW PIN'; document.getElementById('pin-error').textContent = ''; clearPinDots('pd'); },
+  confirmNew() {
+    if (this.buffer === this.newBuffer) {
+      this.savePin(this.buffer); this.mode = 'unlock'; this.buffer = ''; clearPinDots('pd');
+      document.getElementById('pin-subtitle').textContent = 'Enter your PIN to access patient records';
+      document.getElementById('pin-error').textContent = '';
+      document.getElementById('pin-overlay').style.display = 'none';
+      showToast('PIN changed successfully', '🔒', 2500); resetInactivityTimer();
+    } else {
+      document.getElementById('pin-error').textContent = 'PINs do not match. Try again.';
+      shakeDots('pd'); this.buffer = ''; this.newBuffer = ''; this.mode = 'new';
+      document.getElementById('pin-subtitle').textContent = 'Enter your NEW PIN'; clearPinDots('pd');
+    }
+  }
+};
+function pinKey(d) { PinSystem.key(d); }
+function pinBackspace() { PinSystem.backspace(); }
+function startChangePin() { PinSystem.startChange(); }
+function changePinFromSettings() {
+  PinSystem.startChange();
+  document.getElementById('pin-overlay').style.display = 'flex';
+}
+
+/* ── LOCK SYSTEM ── */
+const LockSystem = {
+  buffer: '',
+  key(d) {
+    if (this.buffer.length >= 4) return;
+    this.buffer += d; updatePinDots('lpd', this.buffer.length);
+    if (this.buffer.length === 4) {
+      if (PinSystem.hashPin(this.buffer) === PinSystem.getHash()) {
+        document.getElementById('lock-overlay').style.display = 'none';
+        document.getElementById('lock-error').textContent = '';
+        this.buffer = ''; resetInactivityTimer();
+      } else {
+        document.getElementById('lock-error').textContent = 'Incorrect PIN.';
+        shakeDots('lpd'); this.buffer = ''; setTimeout(() => clearPinDots('lpd'), 400);
+      }
+    }
+  },
+  backspace() { if (this.buffer.length > 0) { this.buffer = this.buffer.slice(0,-1); updatePinDots('lpd', this.buffer.length); } }
+};
+function lockKey(d) { LockSystem.key(d); }
+function lockBackspace() { LockSystem.backspace(); }
+function lockNow() { document.getElementById('lock-overlay').style.display = 'flex'; LockSystem.buffer = ''; clearPinDots('lpd'); document.getElementById('lock-error').textContent = ''; clearTimeout(inactivityTimer); }
+function resetInactivityTimer() { clearTimeout(inactivityTimer); inactivityTimer = setTimeout(lockNow, LOCK_TIME); }
+['mousedown','mousemove','keydown','touchstart','scroll'].forEach(e => document.addEventListener(e, resetInactivityTimer, {passive:true}));
+
+function updatePinDots(prefix, count) { for (let i=0;i<4;i++) { const d=document.getElementById(prefix+i); if(d) d.classList.toggle('filled', i<count); } }
+function clearPinDots(prefix) { for (let i=0;i<4;i++) { const d=document.getElementById(prefix+i); if(d) { d.classList.remove('filled','error'); } } }
+function shakeDots(prefix) { for(let i=0;i<4;i++) { const d=document.getElementById(prefix+i); if(d){d.classList.add('error'); setTimeout(()=>d.classList.remove('error'),400); } } }
+
+/* ── TOAST ── */
+function showToast(msg, icon='✅', dur=2800) {
+  const t=document.getElementById('toast');
+  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+/* ── AUTOSAVE ── */
+const AutoSave = {
+  timer: null,
+  trigger() {
+    clearTimeout(this.timer);
+    const st = document.getElementById('save-status');
+    document.getElementById('save-text').textContent = 'Saving…';
+    st.className = 'saving';
+    this.timer = setTimeout(() => this.commit(), 800);
+  },
+  commit() {
+    const d = {};
+    FIELDS.forEach(id => { const el = document.getElementById(id); if (el) d[id] = el.value; });
+    RADIOS.forEach(n => { const s = document.querySelector(`input[name="${n}"]:checked`); if (s) d['r_'+n] = s.value; });
+    CHECKS.forEach(id => { const el = document.getElementById(id); if (el) d['c_'+id] = el.checked; });
+    localStorage.setItem('ortho_form', JSON.stringify(d));
+    const st = document.getElementById('save-status');
+    st.className = 'saved';
+    document.getElementById('save-text').textContent = 'Saved';
+    updateProgress();
+  }
+};
+function autosave() { AutoSave.trigger(); }
+
+function loadFromStorage() {
+  vertRangeManual = false;
+  const raw = localStorage.getItem('ortho_form');
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    FIELDS.forEach(id => { const el=document.getElementById(id); if(el&&d[id]!==undefined) el.value=d[id]; });
+    RADIOS.forEach(n => { if(d['r_'+n]) { const el=document.querySelector(`input[name="${n}"][value="${d['r_'+n]}"]`); if(el) el.checked=true; } });
+    CHECKS.forEach(id => { const el=document.getElementById(id); if(el&&d['c_'+id]!==undefined) el.checked=d['c_'+id]; });
+    document.getElementById('save-status').className = 'saved';
+    document.getElementById('save-text').textContent = 'Saved';
+  } catch(e) {}
+}
+
+function newPatient() {
+  if (!confirm('Start a new patient? Unsaved changes will be lost.')) return;
+  vertRangeManual = false;
+  FIELDS.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  RADIOS.forEach(n => document.querySelectorAll(`input[name="${n}"]`).forEach(el => el.checked=false));
+  CHECKS.forEach(id => { const el=document.getElementById(id); if(el) el.checked=false; });
+  document.getElementById('pt-date').valueAsDate = new Date();
+  document.getElementById('ex-tmj').value = 'NAD';
+  localStorage.removeItem('ortho_form');
+  document.getElementById('save-status').className = '';
+  document.getElementById('save-text').textContent = 'Unsaved';
+  selectedTeeth = [];
+  PhotoManager.clearAll();
+  toggleAppliance(); toggleExtraction();
+  updateAllDots(); updateProgress(); updateSummary(); suggestDiagnosis();
+  updatePatientPill();
+  showSection('patient');
+  showToast('New patient form ready', '🗑', 2000);
+}
+
+/* ── PATIENT PILL ── */
+function updatePatientPill() {
+  const name = v('pt-name') || 'New Patient';
+  const record = v('pt-record') || '';
+  const date = v('pt-date') || '';
+  document.getElementById('pp-name').textContent = name;
+  document.getElementById('pp-meta').textContent = [record, date].filter(Boolean).join(' · ') || 'No record loaded';
+}
+
+/* ── HELPERS ── */
+function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+function radio(name) { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; }
+function checks(map) { return map.filter(([id]) => document.getElementById(id)?.checked).map(([,l]) => l).join(', '); }
+function apStr() { return checks([['ap-normal','Normal'],['ap-oj-inc','Increased Overjet'],['ap-oj-red','Reduced Overjet'],['ap-oj-rev','Reverse Overjet'],['ap-bimax','Bimaxillary Protrusion'],['ap-u-pro','Upper Incisors Proclined'],['ap-u-ret','Upper Incisors Retroclined'],['ap-l-pro','Lower Incisors Proclined'],['ap-l-ret','Lower Incisors Retroclined']]); }
+function sagStr() { return checks([['sag-none','None'],['sag-ant','Anterior Crossbite'],['sag-post-r','Posterior Crossbite (Right)'],['sag-post-l','Posterior Crossbite (Left)'],['sag-bilat','Bilateral Posterior Crossbite'],['sag-scissors','Scissors Bite'],['sag-edge','Edge-to-Edge']]); }
+function vertStr() { return checks([['vert-normal','Normal'],['vert-deep','Increased Overbite (Deep Bite)'],['vert-red','Reduced Overbite'],['vert-aob','Anterior Open Bite'],['vert-pob','Posterior Open Bite'],['vert-spee-deep','Deep Curve of Spee'],['vert-spee-rev','Reverse Curve of Spee']]); }
+function anchorageStr() { return checks([['anc-none','None'],['anc-tads','TADs'],['anc-plates','Anchorage Plates'],['anc-tpa','TPA'],['anc-nance','Nance Appliance'],['anc-lingual','Lingual Arch'],['anc-headgear','Headgear']]); }
+function elastics() { return checks([['tx-el-none','None'],['tx-el-c2','Class II'],['tx-el-c3','Class III'],['tx-el-vert','Vertical'],['tx-el-tri','Triangular'],['tx-el-box','Box'],['tx-el-cross','Cross'],['tx-el-other','Other']]); }
+
+/* ── VALIDATION ── */
+function validateExamDate() {
+  const el = document.getElementById('pt-date');
+  if (el.value) {
+    const sel = new Date(el.value), today = new Date();
+    today.setHours(0,0,0,0);
+    if (sel > today) { el.value = new Date().toISOString().split('T')[0]; showToast('Future dates not allowed','⚠️',2000); }
+  }
+}
+function validateAngle(el) {
+  const raw = el.value.replace(/[°\s]/g,'');
+  el.style.borderColor = (raw && isNaN(parseFloat(raw))) ? 'var(--red)' : '';
+  el.style.background = (raw && isNaN(parseFloat(raw))) ? '#fff5f5' : '';
+}
+function appendUnit(el, unit) {
+  let val = el.value.trim();
+  if (!val) return;
+  val = val.replace(/[°\s]|mm$/g,'').trim();
+  if (val && !isNaN(parseFloat(val))) el.value = val + ' ' + unit;
+}
+
+/* ── DOB HELPERS ── */
+function formatDobInput(el) {
+  // Auto-insert slashes: 2 digits → add /, 4 digits → add /
+  let val = el.value.replace(/[^0-9]/g, '');
+  if (val.length > 8) val = val.slice(0, 8);
+  if (val.length >= 5) val = val.slice(0,2) + '/' + val.slice(2,4) + '/' + val.slice(4);
+  else if (val.length >= 3) val = val.slice(0,2) + '/' + val.slice(2);
+  el.value = val;
+}
+function syncDobFromPicker(isoVal) {
+  // isoVal = YYYY-MM-DD → convert to DD/MM/YYYY
+  if (!isoVal) return;
+  const [y,m,d] = isoVal.split('-');
+  document.getElementById('pt-dob').value = d + '/' + m + '/' + y;
+  calcAge(); autosave();
+}
+
+/* ── CALC AGE ── */
+function calcAge() {
+  const parts = document.getElementById('pt-dob').value.trim().split('/');
+  if (parts.length !== 3) return;
+  const [d,m,y] = parts.map(Number);
+  if (!d||!m||!y||y<1900) return;
+  const birth = new Date(y,m-1,d), today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  if (today.getMonth()-birth.getMonth()<0 || (today.getMonth()===birth.getMonth()&&today.getDate()<birth.getDate())) age--;
+  if (age>=0&&age<120) { document.getElementById('pt-age').value = age+' years'; autoFillGrowth(age); autosave(); updateSummary(); }
+}
+
+function autoFillGrowth(age) {
+  const cvmEl = document.getElementById('gr-cvm');
+  const matEl = document.getElementById('gr-maturity');
+  const agegEl = document.getElementById('gr-agegroup');
+  let cvm='', maturity='', ageGroup='';
+  if(age<=7){cvm='CS1 – Pre-peak (large growth potential)';maturity='Growing – High potential';}
+  else if(age<=9){cvm='CS2 – Pre-peak (large growth potential)';maturity='Growing – High potential';}
+  else if(age<=11){cvm='CS3 – Peak growth';maturity='Growing – High potential';}
+  else if(age<=13){cvm='CS3 – Peak growth';maturity='Growing – Moderate potential';}
+  else if(age<=15){cvm='CS4 – Post-peak (some growth remaining)';maturity='Growing – Moderate potential';}
+  else if(age<=17){cvm='CS5 – Post-peak (minimal growth)';maturity='Approaching completion';}
+  else if(age<=19){cvm='CS6 – Growth complete';maturity='Approaching completion';}
+  else{cvm='CS6 – Growth complete';maturity='Complete';}
+  if(age<=10) ageGroup='Child (≤10 years)';
+  else if(age<=13) ageGroup='Early adolescent (11–13)';
+  else if(age<=16) ageGroup='Mid adolescent (14–16)';
+  else if(age<=19) ageGroup='Late adolescent (17–19)';
+  else ageGroup='Adult (≥20 years)';
+  function setAuto(el,val){el.value=val;el.style.background='#f0fdf4';el.style.borderColor='#86efac';setTimeout(()=>{el.style.background='';el.style.borderColor='';},2000);}
+  setAuto(cvmEl,cvm); setAuto(matEl,maturity); setAuto(agegEl,ageGroup);
+  updateDot('diag'); updateSummary();
+}
+
+/* ── CALC ANB ── */
+function calcANB() {
+  const sna = parseFloat(document.getElementById('rx-sna').value.replace(/[°\s]/g,''));
+  const snb = parseFloat(document.getElementById('rx-snb').value.replace(/[°\s]/g,''));
+  const anbEl = document.getElementById('rx-anb');
+  const chip = document.getElementById('anb-chip');
+  if (!isNaN(sna)&&!isNaN(snb)) {
+    const anb = sna - snb;
+    anbEl.value = anb.toFixed(1)+'°'; anbEl.className = '';
+    chip.style.display = 'inline-block';
+    if (anb>=-1&&anb<=3) { anbEl.classList.add('anb-normal'); chip.className='anb-chip normal'; chip.textContent='Skeletal Class I (Normal)'; }
+    else if (anb>3) { anbEl.classList.add('anb-class2'); chip.className='anb-chip class2'; chip.textContent=`Skeletal Class II (ANB ${anb.toFixed(1)}°)`; }
+    else { anbEl.classList.add('anb-class3'); chip.className='anb-chip class3'; chip.textContent=`Skeletal Class III (ANB ${anb.toFixed(1)}°)`; }
+    updateSummary(); suggestDiagnosis();
+  } else { anbEl.value=''; anbEl.className=''; chip.style.display='none'; }
+  autosave();
+}
+
+/* ── APPLIANCE TOGGLES ── */
+function toggleAppliance() {
+  const s = document.querySelector('input[name="tx-appl"]:checked');
+  const val = s ? s.value : '';
+  const showFixed = val==='Fixed Appliance'||val==='Both (Fixed + Aligner)';
+  const showAligner = val==='Clear Aligner (Invisalign)'||val==='Both (Fixed + Aligner)';
+  const showFunctional = val==='Functional Appliance'||val==='Functional + Fixed (Conjunction)'||val==='Two-Stage: Functional → Fixed';
+  document.getElementById('fixed-options').className='tx-conditional'+(showFixed?' visible':'');
+  document.getElementById('aligner-options').className='tx-conditional'+(showAligner?' visible':'');
+  const fEl=document.getElementById('functional-options');
+  if(fEl) fEl.className='tx-conditional'+(showFunctional?' visible':'');
+}
+function toggleFunctionalStage() {}
+
+/* ── MMPA AUTO-CLASSIFY ── */
+let vertRangeManual = false;
+function autoClassifyMMPA() {
+  const mmpaEl = document.getElementById("l-mmpa");
+  const rangeEl = document.getElementById("vert-range");
+  const badge = document.getElementById("vert-range-auto-badge");
+  if (!mmpaEl || !rangeEl) return;
+  const raw = mmpaEl.value.replace(/[°\s]/g, "");
+  const val = parseFloat(raw);
+  if (isNaN(val)) return;
+  if (!vertRangeManual) {
+    let cls = val < 23 ? "Low (Hypodivergent)" : val <= 28 ? "Normal" : "High (Hyperdivergent)";
+    rangeEl.value = cls;
+    if (badge) badge.style.display = "inline-block";
+  }
+}
+function appendDegreeMMPA() {
+  const el = document.getElementById("l-mmpa");
+  if (!el) return;
+  let val = el.value.trim().replace(/[°\s]/g, "");
+  if (val && !isNaN(parseFloat(val))) {
+    el.value = parseFloat(val) + "°";
+    autoClassifyMMPA();
+  }
+}
+function toggleExtraction() {
+  const s = document.querySelector('input[name="tx-ext"]:checked');
+  document.getElementById('extraction-options').className='tx-conditional'+(s&&s.value==='Extraction'?' visible':'');
+}
+
+/* ── NAV DOTS (completion indicators) ── */
+const SECTION_BADGE_MAP = {
+  patient: ['pt-name','pt-gender','cc'],
+  exam: ['ex-profile','ex-sym','ex-lips','in-hygiene','in-dent','in-molR','in-molL','in-oj','in-ob'],
+  diag: ['gr-cvm','iotn-dhc','iotn-ac'],
+  assess: ['diag-primary','diag-notes'],
+  plan: [],
+  photos: []
+};
+function updateDot(section) {
+  const dot = document.getElementById('dot-' + section);
+  if (!dot) return;
+  if (section === 'plan') {
+    const ok = !!document.querySelector('input[name="tx-appl"]:checked');
+    dot.className = 'nav-dot' + (ok ? ' complete' : '');
+    return;
+  }
+  const fields = SECTION_BADGE_MAP[section] || [];
+  const filled = fields.filter(id => v(id)).length;
+  if (filled === fields.length && fields.length > 0) dot.className = 'nav-dot complete';
+  else if (filled > 0) dot.className = 'nav-dot partial';
+  else dot.className = 'nav-dot';
+}
+function updateAllDots() { Object.keys(SECTION_BADGE_MAP).forEach(s => updateDot(s)); }
+
+/* ── PROGRESS ── */
+function updateProgress() {
+  updateAllDots();
+  const sections = Object.keys(SECTION_BADGE_MAP).filter(s => s !== 'photos');
+  const done = sections.filter(s => {
+    if (s === 'plan') return !!document.querySelector('input[name="tx-appl"]:checked');
+    const fields = SECTION_BADGE_MAP[s];
+    return fields.length > 0 && fields.every(id => v(id));
+  }).length;
+  const pct = Math.round(done / sections.length * 100);
+  document.getElementById('progress-pct').textContent = pct + '%';
+  const circumference = 65;
+  const offset = circumference - (pct / 100 * circumference);
+  document.getElementById('progress-ring').style.strokeDashoffset = offset;
+}
+
+/* ── CLINICAL SUMMARY ── */
+function updateSummary() {
+  const age=v('pt-age'), gender=v('pt-gender').toLowerCase()||'patient';
+  const molR=v('in-molR'),molL=v('in-molL'),oj=v('in-oj'),anb=v('rx-anb');
+  const uType=v('u-cs-type'),uSev=v('u-cs-sev'),uAmt=v('u-cs-amt');
+  const lType=v('l-cs-type'),lSev=v('l-cs-sev'),lAmt=v('l-cs-amt');
+  const cvm=v('gr-cvm'),iotn=v('iotn-dhc');
+  const parts=[];
+  if (!age&&!molR&&!oj) { const el=document.getElementById('summary-text'); el.className='empty'; el.textContent='Fill in patient details, molar class, overjet, and ANB to generate the clinical summary.'; return; }
+  let opening=age?age+'-old '+gender:'Patient'; opening+=' presents';
+  parts.push(opening);
+  if (molR||molL) { const molDesc=molR===molL&&molR?molR:(molR&&molL?`${molR} (R) / ${molL} (L)`:molR||molL); let cls=''; const ml=molDesc.toLowerCase(); if(ml.includes('class i')&&!ml.includes('ii')&&!ml.includes('iii'))cls='Class I'; else if(ml.includes('class ii')&&!ml.includes('iii'))cls='Class II'; else if(ml.includes('class iii'))cls='Class III'; if(cls) parts.push('with '+cls+' molar relationship'); }
+  const crowdParts=[];
+  if(uType&&uType!=='None') crowdParts.push((uSev?uSev.split(' ')[0].toLowerCase()+' ':'')+uType.toLowerCase()+' upper arch'+(uAmt?' ('+uAmt+')':''));
+  if(lType&&lType!=='None') crowdParts.push((lSev?lSev.split(' ')[0].toLowerCase()+' ':'')+lType.toLowerCase()+' lower arch'+(lAmt?' ('+lAmt+')':''));
+  if(crowdParts.length) parts.push(crowdParts.join(', '));
+  if(oj){const ojN=parseFloat(oj);if(!isNaN(ojN)){if(ojN>3)parts.push('increased overjet '+oj);else if(ojN<0)parts.push('reverse overjet '+oj);else parts.push('overjet '+oj);}}
+  if(anb){const anbN=parseFloat(anb);if(!isNaN(anbN)){let sk='';if(anbN>=-1&&anbN<=3)sk='Skeletal Class I';else if(anbN>3)sk='Skeletal Class II';else sk='Skeletal Class III';parts.push('ANB '+anb+' ('+sk+')');}}
+  if(iotn) parts.push('IOTN '+iotn);
+  if(cvm) parts.push(cvm.split('–')[0].trim());
+  const summary = parts.join(', ')+'.';
+  const el=document.getElementById('summary-text');
+  el.className=''; el.textContent=summary.charAt(0).toUpperCase()+summary.slice(1);
+}
+
+/* ── DIAGNOSIS ENGINE ── */
+const DiagnosisEngine = {
+  isClassI(s){return s&&s.toLowerCase().includes('class i')&&!s.toLowerCase().includes('ii')&&!s.toLowerCase().includes('iii');},
+  isClassII(s){return s&&s.toLowerCase().includes('class ii')&&!s.toLowerCase().includes('iii');},
+  isClassIII(s){return s&&s.toLowerCase().includes('class iii');},
+  score(){
+    const molR=v('in-molR'),molL=v('in-molL'),anb=parseFloat(v('rx-anb'));
+    const antCross=document.getElementById('sag-ant')?.checked,revOJ=document.getElementById('ap-oj-rev')?.checked,incOJ=document.getElementById('ap-oj-inc')?.checked;
+    const uType=v('u-cs-type'),lType=v('l-cs-type'),obDeep=document.getElementById('vert-deep')?.checked,aob=document.getElementById('vert-aob')?.checked;
+    const s={I:0,II:0,III:0,crowd:0,space:0,deep:0,aob:0};
+    if(this.isClassI(molR))s.I+=3;if(this.isClassI(molL))s.I+=3;
+    if(this.isClassII(molR))s.II+=3;if(this.isClassII(molL))s.II+=3;
+    if(this.isClassIII(molR))s.III+=3;if(this.isClassIII(molL))s.III+=3;
+    if(!isNaN(anb)){if(anb>=-1&&anb<=3)s.I+=4;else if(anb>3)s.II+=anb>5?5:3;else s.III+=Math.abs(anb)>3?5:3;}
+    if(revOJ||antCross)s.III+=2;if(incOJ)s.II+=1;
+    if(uType==='Crowding'||lType==='Crowding'||uType==='Both'||lType==='Both')s.crowd=1;
+    if(uType==='Spacing'||lType==='Spacing')s.space=1;
+    if(obDeep)s.deep=1;if(aob)s.aob=1;
+    return s;
+  },
+  conflicts(){
+    const warnings=[];const molR=v('in-molR'),molL=v('in-molL'),anb=parseFloat(v('rx-anb'));
+    const antCross=document.getElementById('sag-ant')?.checked,revOJ=document.getElementById('ap-oj-rev')?.checked;
+    if(!isNaN(anb)){
+      if((this.isClassII(molR)||this.isClassII(molL))&&anb<-1)warnings.push(`⚠️ Class II molar but ANB ${anb.toFixed(1)}° suggests Skeletal Class III — dentoalveolar compensation possible`);
+      if((this.isClassIII(molR)||this.isClassIII(molL))&&anb>3)warnings.push(`⚠️ Class III molar but ANB ${anb.toFixed(1)}° suggests Skeletal Class II — check for pseudo–Class III`);
+      if((antCross||revOJ)&&anb>4)warnings.push(`⚠️ Anterior crossbite / reverse OJ with ANB ${anb.toFixed(1)}° — likely functional shift`);
+    }
+    return warnings;
+  },
+  suggest(){
+    const s=this.score();const suggestions=[];const molR=v('in-molR'),molL=v('in-molL'),anb=parseFloat(v('rx-anb'));
+    const maxClass=Math.max(s.I,s.II,s.III);const secondClass=[s.I,s.II,s.III].sort((a,b)=>b-a)[1];
+    if(s.II>s.III&&s.II>s.I)suggestions.push({code:'K07.22',desc:"Malocclusion, Angle's Class II",reason:`Score ${s.II} (molar+ANB ${!isNaN(anb)?anb.toFixed(1)+'°':'N/A'})`});
+    else if(s.III>s.II&&s.III>s.I)suggestions.push({code:'K07.23',desc:"Malocclusion, Angle's Class III",reason:`Score ${s.III}`});
+    else suggestions.push({code:'K07.21',desc:"Malocclusion, Angle's Class I",reason:`Score ${s.I}`});
+    if(s.crowd)suggestions.push({code:'K07.31',desc:'Crowding of teeth',reason:`Upper:${v('u-cs-type')||'—'} / Lower:${v('l-cs-type')||'—'}`});
+    if(s.space)suggestions.push({code:'K07.32',desc:'Excessive spacing of teeth',reason:'Spacing detected'});
+    if(s.deep)suggestions.push({code:'K07.24',desc:'Deep bite (Increased overbite)',reason:'Vertical finding'});
+    if(s.aob)suggestions.push({code:'K07.20',desc:'Anterior open bite',reason:'Vertical finding'});
+    const seen=new Set();return suggestions.filter(sg=>{if(seen.has(sg.code))return false;seen.add(sg.code);return true;});
+  },
+  render(){
+    const suggestions=this.suggest(),warnings=this.conflicts();
+    const wrap=document.getElementById('diag-suggestions-wrap'),list=document.getElementById('diag-sug-list'),warnEl=document.getElementById('diag-conflict-warn');
+    if(!wrap) return;
+    if(warnEl){warnEl.innerHTML=warnings.map(w=>`<div class="conflict-warn">${w}</div>`).join('');warnEl.style.display=warnings.length?'block':'none';}
+    if(!suggestions.length){wrap.style.display='none';return;}
+    wrap.style.display='block';window._lastSuggestions=suggestions;
+    list.innerHTML=suggestions.map((s,i)=>{
+      const target=i===0?'Primary':i===1?'Secondary':'Tertiary';
+      return `<div class="diag-sug-item"><span class="diag-sug-code">${s.code}</span><span class="diag-sug-desc">${s.desc} <span style="color:var(--gray-400);font-size:10.5px">(${s.reason})</span></span><button class="btn-suggest" onclick="applySuggestion(${i})">→ ${target}</button></div>`;
+    }).join('');
+  }
+};
+function suggestDiagnosis() { DiagnosisEngine.render(); }
+function applySuggestion(idx) {
+  const s=window._lastSuggestions&&window._lastSuggestions[idx]; if(!s) return;
+  const fullVal=s.code+' – '+s.desc;
+  const targetId=idx===0?'diag-primary':idx===1?'diag-secondary':'diag-tertiary';
+  const sel=document.getElementById(targetId); if(!sel) return;
+  let matched=false;
+  for(let opt of sel.options){if(opt.value.startsWith(s.code)){sel.value=opt.value;matched=true;break;}}
+  if(!matched){const opt=document.createElement('option');opt.value=fullVal;opt.text=fullVal;sel.appendChild(opt);sel.value=fullVal;}
+  autosave(); updateDot('assess');
+  showToast(['Primary','Secondary','Tertiary'][idx]+' diagnosis set: '+s.code,'📋',2000);
+}
+
+/* ── PHOTO MANAGER ── */
+const PHOTO_SLOTS = ['frontal','profile','smile','upper','lower','buccalLeft','buccalRight','opg','ceph'];
+const PHOTO_LABELS = {frontal:'Frontal View',profile:'Profile',smile:'Smile / Social',upper:'Upper Occlusal',lower:'Lower Occlusal',buccalLeft:'Buccal View Left',buccalRight:'Buccal View Right',opg:'OPG',ceph:'Cephalometric X-ray'};
+/* ── INDEXEDDB PHOTO STORE ── */
+const PhotoDB = {
+  _db: null,
+  open() {
+    if (this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej) => {
+      const req = indexedDB.open('orthoflow_photos', 1);
+      req.onupgradeneeded = e => e.target.result.createObjectStore('photos');
+      req.onsuccess = e => { this._db = e.target.result; res(this._db); };
+      req.onerror = e => rej(e.target.error);
+    });
+  },
+  async get(key) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const req = db.transaction('photos','readonly').objectStore('photos').get(key);
+      req.onsuccess = () => res(req.result || {});
+      req.onerror = e => rej(e.target.error);
+    });
+  },
+  async set(key, val) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const req = db.transaction('photos','readwrite').objectStore('photos').put(val, key);
+      req.onsuccess = () => res();
+      req.onerror = e => rej(e.target.error);
+    });
+  },
+  async delete(key) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const req = db.transaction('photos','readwrite').objectStore('photos').delete(key);
+      req.onsuccess = () => res();
+      req.onerror = e => rej(e.target.error);
+    });
+  }
+};
+
+const PhotoManager = {
+  photos: {},
+  async init() {
+    // Migrate any old localStorage photos to IndexedDB draft slot
+    try {
+      const old = localStorage.getItem('ortho_photos');
+      if (old) {
+        const parsed = JSON.parse(old);
+        await PhotoDB.set('draft', parsed);
+        localStorage.removeItem('ortho_photos');
+      }
+    } catch(e) {}
+    try {
+      this.photos = await PhotoDB.get('draft');
+      PHOTO_SLOTS.forEach(id => { if (this.photos[id]) this._updateSlot(id, this.photos[id]); });
+    } catch(e) {}
+  },
+  trigger(id) { document.getElementById('pfile-'+id)?.click(); },
+  load(input, id) {
+    const file = input.files[0]; if (!file) return;
+    if (file.size > 2*1024*1024) { showToast('Image too large. Max 2 MB.','⚠️',3000); return; }
+    const r = new FileReader();
+    r.onload = async e => {
+      const entry = { name: file.name, data: e.target.result };
+      this.photos[id] = entry;
+      this._updateSlot(id, entry);
+      await this._save();
+      showToast(PHOTO_LABELS[id]+' added','📷',1500);
+    };
+    r.readAsDataURL(file);
+  },
+  async remove(id) {
+    delete this.photos[id];
+    this._clearSlot(id);
+    await this._save();
+    showToast(PHOTO_LABELS[id]+' removed','🗑',1500);
+  },
+  async clearAll() {
+    this.photos = {};
+    PHOTO_SLOTS.forEach(id => this._clearSlot(id));
+    await PhotoDB.delete('draft');
+  },
+  async _save() {
+    try { await PhotoDB.set('draft', this.photos); }
+    catch(e) { showToast('Photo storage error','⚠️',4000); }
+  },
+  // Called when saving a patient — snapshots current photos under their ID
+  async saveForPatient(patientId) {
+    try { await PhotoDB.set(patientId, JSON.parse(JSON.stringify(this.photos))); }
+    catch(e) { showToast('Could not save photos','⚠️',4000); }
+  },
+  // Called when loading a patient — restores their photos into the working state
+  async loadForPatient(patientId) {
+    try {
+      this.photos = await PhotoDB.get(patientId);
+      PHOTO_SLOTS.forEach(id => {
+        if (this.photos[id]) this._updateSlot(id, this.photos[id]);
+        else this._clearSlot(id);
+      });
+      await PhotoDB.set('draft', this.photos);
+    } catch(e) {}
+  },
+  // Called when deleting a patient — removes their photo store
+  async deleteForPatient(patientId) {
+    try { await PhotoDB.delete(patientId); } catch(e) {}
+  },
+  _updateSlot(id, entry) {
+    const thumb=document.getElementById('pthumb-'+id);const rem=document.getElementById('premove-'+id);const add=document.querySelector(`#pslot-${id} .photo-btn`);
+    if(thumb){thumb.src=entry.data;thumb.style.display='block';}if(rem)rem.style.display='block';if(add)add.textContent='🔄 Replace';
+  },
+  _clearSlot(id) {
+    const thumb=document.getElementById('pthumb-'+id);const rem=document.getElementById('premove-'+id);const add=document.querySelector(`#pslot-${id} .photo-btn`);const fi=document.getElementById('pfile-'+id);
+    if(thumb){thumb.src='';thumb.style.display='none';}if(rem)rem.style.display='none';if(add)add.textContent='📷 Add Photo';if(fi)fi.value='';
+  },
+  reportHTML() {
+    const active=PHOTO_SLOTS.filter(id=>this.photos[id]);if(!active.length)return '';
+    return `<div class="r-section">Clinical Photographs</div><div class="r-photo-grid">${active.map(id=>`<div class="r-photo-item"><img src="${this.photos[id].data}" alt="${PHOTO_LABELS[id]}"><p>${PHOTO_LABELS[id]}</p></div>`).join('')}</div>`;
+  }
+};
+
+/* ── TOOTH CHART ── */
+let selectedTeeth = [];
+const upperTeeth=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+const lowerTeeth=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+function buildToothChart() {
+  const up=document.getElementById('upper-row'),lo=document.getElementById('lower-row');
+  if(!up||!lo) return;
+  function makeRow(teeth,container){
+    teeth.forEach((n,i)=>{
+      if(i===8){const div=document.createElement('div');div.className='tooth-divider';container.appendChild(div);}
+      const el=document.createElement('div');el.className='tooth';el.id='tooth-'+n;
+      el.innerHTML=`<span style="font-size:9px;color:inherit">${n}</span>`;
+      el.title='Tooth '+n+' (FDI)';el.onclick=()=>toggleTooth(n);container.appendChild(el);
+    });
+  }
+  makeRow(upperTeeth,up);makeRow(lowerTeeth,lo);
+}
+function toggleTooth(n){const idx=selectedTeeth.indexOf(n);if(idx>=0)selectedTeeth.splice(idx,1);else selectedTeeth.push(n);document.getElementById('tooth-'+n).className='tooth'+(selectedTeeth.includes(n)?' selected':'');updateSelectedPreview();}
+function updateSelectedPreview(){const sorted=[...selectedTeeth].sort((a,b)=>a-b);document.getElementById('selected-teeth-preview').textContent=sorted.length?sorted.join(', '):'None';}
+function openToothChart(){
+  document.getElementById('tooth-modal').classList.add('open');
+  const existing=v('tx-ext-teeth');
+  selectedTeeth=existing?existing.split(/[,\s]+/).map(Number).filter(n=>!isNaN(n)&&n>0):[];
+  upperTeeth.concat(lowerTeeth).forEach(n=>{const el=document.getElementById('tooth-'+n);if(el)el.className='tooth'+(selectedTeeth.includes(n)?' selected':'');});
+  updateSelectedPreview();
+}
+function closeToothChart(){document.getElementById('tooth-modal').classList.remove('open');}
+function applyToothSelection(){const sorted=[...selectedTeeth].sort((a,b)=>a-b);document.getElementById('tx-ext-teeth').value=sorted.join(', ');closeToothChart();autosave();showToast(`${sorted.length} teeth selected`,'🦷',2000);}
+
+/* ── MODAL HELPERS ── */
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+/* ── MULTI-PATIENT DATABASE ── */
+function getDB(){try{return JSON.parse(localStorage.getItem('ortho_db')||'[]');}catch(e){return[];}}
+function saveDB(db){
+  try {
+    localStorage.setItem('ortho_db', JSON.stringify(db));
+  } catch(e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      showToast('⚠️ Storage full — record not saved. Export a backup to free space.', '❌', 6000);
+    } else {
+      showToast('Save failed: ' + e.message, '❌', 4000);
+    }
+    throw e; // re-throw so callers know it failed
+  }
+}
+
+function captureFormData() {
+  const d = {};
+  FIELDS.forEach(id=>{const el=document.getElementById(id);if(el)d[id]=el.value;});
+  RADIOS.forEach(n=>{const s=document.querySelector(`input[name="${n}"]:checked`);if(s)d['r_'+n]=s.value;});
+  CHECKS.forEach(id=>{const el=document.getElementById(id);if(el)d['c_'+id]=el.checked;});
+  d['_teeth'] = selectedTeeth.slice();
+  // Photos are stored separately in IndexedDB — not embedded in the record
+  return d;
+}
+function restoreFormData(d) {
+  FIELDS.forEach(id=>{const el=document.getElementById(id);if(el&&d[id]!==undefined)el.value=d[id];});
+  RADIOS.forEach(n=>{if(d['r_'+n]){const el=document.querySelector(`input[name="${n}"][value="${d['r_'+n]}"]`);if(el)el.checked=true;}});
+  CHECKS.forEach(id=>{const el=document.getElementById(id);if(el&&d['c_'+id]!==undefined)el.checked=d['c_'+id];});
+  if(d['_teeth']){selectedTeeth=d['_teeth'];upperTeeth.concat(lowerTeeth).forEach(n=>{const el=document.getElementById('tooth-'+n);if(el)el.className='tooth'+(selectedTeeth.includes(n)?' selected':'');});}
+  // Photos are loaded separately via PhotoManager.loadForPatient()
+  toggleAppliance();toggleExtraction();updateAllDots();updateProgress();updateSummary();suggestDiagnosis();updatePatientPill();
+}
+
+async function savePatientDB() {
+  const db = getDB();
+  const formData = captureFormData();
+  const name = formData['pt-name'] || 'Unnamed Patient';
+  const date = formData['pt-date'] || new Date().toISOString().split('T')[0];
+  const record = formData['pt-record'] || '';
+  let existingIdx = -1;
+  if (record) existingIdx = db.findIndex(r => r.meta.record === record);
+  const entry = { id: existingIdx >= 0 ? db[existingIdx].id : 'p_'+Date.now(), meta: {name,date,record}, data: formData, savedAt: new Date().toISOString() };
+  if (existingIdx >= 0) { db[existingIdx] = entry; }
+  else { db.push(entry); }
+  try {
+    saveDB(db);
+    await PhotoManager.saveForPatient(entry.id);
+    showToast(existingIdx >= 0 ? `Record updated: ${name}` : `Patient saved: ${name}`, '💾', 2500);
+  } catch(e) {
+    // saveDB already showed the toast on QuotaExceededError
+  }
+}
+
+function openLoadModal() {
+  renderRecordsList(document.getElementById('search-records').value || '');
+  openModal('load-modal');
+}
+
+let _filterTimer = null;
+function filterRecords(q) {
+  clearTimeout(_filterTimer);
+  _filterTimer = setTimeout(() => renderRecordsList(q), 180);
+}
+
+function renderRecordsList(q) {
+  const db = getDB();
+  const list = document.getElementById('records-list');
+  const filtered = db.filter(r => !q || r.meta.name.toLowerCase().includes(q.toLowerCase()) || (r.meta.record||'').toLowerCase().includes(q.toLowerCase()));
+  if (!filtered.length) { list.innerHTML='<div id="no-records-msg">No saved records found.</div>'; return; }
+  list.innerHTML = filtered.map(r => `
+    <div class="patient-record-item" onclick="loadPatient('${r.id}')">
+      <div class="pr-info">
+        <div class="pr-name">${r.meta.name}</div>
+        <div class="pr-meta">${r.meta.record ? '# '+r.meta.record+' · ':''} ${r.meta.date} · Saved ${new Date(r.savedAt).toLocaleDateString()}</div>
+      </div>
+      <button class="pr-del" onclick="event.stopPropagation();deletePatient('${r.id}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderRecordsPage(q) {
+  const db = getDB();
+  const list = document.getElementById('records-page-list');
+  const filtered = db.filter(r => !q || r.meta.name.toLowerCase().includes(q.toLowerCase()) || (r.meta.record||'').toLowerCase().includes(q.toLowerCase()));
+  if (!filtered.length) { list.innerHTML='<div id="no-records-msg" style="padding:24px 0;text-align:center;color:var(--gray-400)">No saved records. Use 💾 Save to store a patient.</div>'; return; }
+  list.innerHTML = filtered.map(r => `
+    <div class="patient-record-item">
+      <div class="pr-info">
+        <div class="pr-name">${r.meta.name}</div>
+        <div class="pr-meta">${r.meta.record ? '# '+r.meta.record+' · ':''} ${r.meta.date} · Saved ${new Date(r.savedAt).toLocaleDateString()}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="loadPatient('${r.id}')" style="flex-shrink:0;margin-right:6px">Load</button>
+      <button class="pr-del" onclick="deletePatient('${r.id}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+
+async function loadPatient(id) {
+  const db = getDB();
+  const entry = db.find(r => r.id === id);
+  if (!entry) return;
+  FIELDS.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  RADIOS.forEach(n=>document.querySelectorAll(`input[name="${n}"]`).forEach(el=>el.checked=false));
+  CHECKS.forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  await PhotoManager.clearAll();
+  restoreFormData(entry.data);
+  await PhotoManager.loadForPatient(entry.id);
+  closeModal('load-modal');
+  showSection('patient');
+  showToast(`Loaded: ${entry.meta.name}`, '📂', 2500);
+}
+
+async function deletePatient(id) {
+  if (!confirm('Delete this patient record? This cannot be undone.')) return;
+  const db = getDB().filter(r => r.id !== id);
+  saveDB(db);
+  await PhotoManager.deleteForPatient(id);
+  renderRecordsList(document.getElementById('search-records').value || '');
+  renderRecordsPage('');
+  showToast('Record deleted', '🗑', 2000);
+}
+
+/* ── EXPORT / IMPORT JSON ── */
+function exportDB() {
+  const db = getDB();
+  if (!db.length) { showToast('No saved records to export','⚠️',3000); return; }
+  // Remove photo data to keep file size reasonable, or include them
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'OrthoFlow_Backup_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast(`Exported ${db.length} record(s)`, '⬇', 2500);
+}
+function importDB(input) {
+  const file = input.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!Array.isArray(imported)) throw new Error('Invalid format');
+      const existing = getDB();
+      const merged = [...existing];
+      let added = 0;
+      imported.forEach(rec => {
+        if (!merged.find(r => r.id === rec.id)) { merged.push(rec); added++; }
+      });
+      saveDB(merged);
+      showToast(`Imported ${added} new record(s)`, '⬆', 3000);
+    } catch(err) { showToast('Import failed: invalid file', '❌', 3000); }
+  };
+  r.readAsText(file); input.value = '';
+}
+
+/* ── EXPORT CSV ── */
+function exportCSV() {
+  const db = getDB(); if (!db.length) { showToast('No saved records','⚠️',3000); return; }
+  const esc = val => '"'+String(val==null?'':val).replace(/"/g,'""')+'"';
+
+  // Build header row: all text fields + all radios + all checkboxes
+  const fieldLabels = {
+    'pt-name':'Name','pt-record':'Record No.','pt-dob':'Date of Birth','pt-age':'Age',
+    'pt-gender':'Gender','pt-date':'Exam Date','pt-referral':'Referred By',
+    'cc':'Chief Complaint','med-history':'Medical History','med-allergy':'Allergies',
+    'ex-profile':'Facial Profile','ex-sym':'Facial Symmetry','ex-lips':'Lip Competence',
+    'ex-naso':'Nasolabial Angle','ex-mento':'Mentolabial Fold','ex-tmj':'TMJ/Muscles','ex-notes':'Extraoral Notes',
+    'in-hygiene':'Oral Hygiene','in-dent':'Dentition',
+    'u-arch':'Upper Arch Form','u-malalign':'Upper Malalignment','u-cs-type':'Upper Crowding/Spacing',
+    'u-cs-sev':'Upper CS Severity','u-cs-amt':'Upper CS Amount','u-notes':'Upper Notes',
+    'l-arch':'Lower Arch Form','l-malalign':'Lower Malalignment','l-cs-type':'Lower Crowding/Spacing',
+    'l-cs-sev':'Lower CS Severity','l-cs-amt':'Lower CS Amount','l-notes':'Lower Notes',
+    'in-molR':'Molar Class Right','in-molL':'Molar Class Left',
+    'in-canR':'Canine Class Right','in-canL':'Canine Class Left',
+    'in-oj':'Overjet','in-ob':'Overbite','in-midU':'Upper Midline','in-midL':'Lower Midline',
+    'ap-note':'AP Notes','sag-note':'Sagittal Notes','l-mmpa':'MMPA','vert-note':'Vertical Notes','in-notes':'Inter-Arch Notes',
+    'rx-pan':'Panoramic','rx-ceph':'Cephalometric','rx-sna':'SNA','rx-snb':'SNB','rx-anb':'ANB','rx-wits':'Wits','rx-notes':'Radiology Notes',
+    'iotn-dhc':'IOTN DHC','iotn-ac':'IOTN AC','iotn-notes':'IOTN Notes',
+    'diag-primary':'Primary Diagnosis','diag-secondary':'Secondary Diagnosis','diag-tertiary':'Tertiary Diagnosis','diag-notes':'Clinical Description',
+    'tx-rx':'Bracket System','tx-slot':'Slot Size','tx-level':'Level/Arch',
+    'tx-aligner':'Aligner Brand','tx-aligner-count':'Aligner Count','tx-refinements':'Refinements',
+    'tx-ext-teeth':'Extraction Teeth','pl-dur':'Duration','pl-ret':'Retention Details','pl-notes':'Plan Notes',
+    'gr-cvm':'CVM Stage','gr-maturity':'Skeletal Maturity','gr-agegroup':'Age Group','gr-notes':'Growth Notes'
+  };
+  const radioLabels = {
+    'tx-appl':'Appliance Type','tx-exp':'Expander','tx-ext':'Extraction',
+    'tx-disart':'Disarticulation','tx-ret':'Retention Type'
+  };
+  const checkLabels = {
+    'ap-normal':'AP: Normal','ap-oj-inc':'AP: Increased OJ','ap-oj-red':'AP: Reduced OJ','ap-oj-rev':'AP: Reverse OJ',
+    'ap-bimax':'AP: Bimaxillary Protrusion','ap-u-pro':'AP: Upper Proclined','ap-u-ret':'AP: Upper Retroclined',
+    'ap-l-pro':'AP: Lower Proclined','ap-l-ret':'AP: Lower Retroclined',
+    'sag-none':'SAG: None','sag-ant':'SAG: Anterior Crossbite','sag-post-r':'SAG: Posterior Crossbite R',
+    'sag-post-l':'SAG: Posterior Crossbite L','sag-bilat':'SAG: Bilateral Posterior','sag-scissors':'SAG: Scissors Bite','sag-edge':'SAG: Edge-to-Edge',
+    'vert-normal':'VERT: Normal','vert-deep':'VERT: Deep Bite','vert-red':'VERT: Reduced OB',
+    'vert-aob':'VERT: Anterior Open Bite','vert-pob':'VERT: Posterior Open Bite',
+    'vert-spee-deep':'VERT: Deep Curve Spee','vert-spee-rev':'VERT: Reverse Curve Spee',
+    'tx-el-none':'Elastics: None','tx-el-c2':'Elastics: Class II','tx-el-c3':'Elastics: Class III',
+    'tx-el-vert':'Elastics: Vertical','tx-el-tri':'Elastics: Triangular','tx-el-box':'Elastics: Box',
+    'tx-el-cross':'Elastics: Cross','tx-el-other':'Elastics: Other',
+    'anc-none':'Anchorage: None','anc-tads':'Anchorage: TADs','anc-plates':'Anchorage: Plates',
+    'anc-tpa':'Anchorage: TPA','anc-nance':'Anchorage: Nance','anc-lingual':'Anchorage: Lingual Arch','anc-headgear':'Anchorage: Headgear'
+  };
+
+  const headers = ['Saved At', ...Object.values(fieldLabels), ...Object.values(radioLabels), ...Object.values(checkLabels), 'Extracted Teeth'];
+
+  const rows = db.map(r => {
+    const d = r.data || {};
+    const fieldVals = Object.keys(fieldLabels).map(k => d[k] || '');
+    const radioVals = Object.keys(radioLabels).map(k => d['r_'+k] || '');
+    const checkVals = Object.keys(checkLabels).map(k => d['c_'+k] ? 'Yes' : '');
+    const teeth = d['_teeth'] ? (Array.isArray(d['_teeth']) ? d['_teeth'].sort((a,b)=>a-b).join(', ') : d['_teeth']) : '';
+    return [new Date(r.savedAt).toLocaleDateString('en-GB'), ...fieldVals, ...radioVals, ...checkVals, teeth];
+  });
+
+  const lines = [headers.map(esc).join(','), ...rows.map(r => r.map(esc).join(','))];
+  const blob = new Blob(['\ufeff'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url;
+  a.download = 'OrthoFlow_AllPatients_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast(`Exported ${db.length} patient(s) to CSV`, '📊', 2500);
+}
+
+/* ── SETTINGS ── */
+function saveSettings() {
+  localStorage.setItem('ortho_settings', JSON.stringify({
+    clinicName: document.getElementById('set-clinic-name')?.value || '',
+    docName: document.getElementById('set-doc-name')?.value || '',
+    docCreds: document.getElementById('set-doc-creds')?.value || ''
+  }));
+}
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('ortho_settings') || '{}');
+    if (s.clinicName) document.getElementById('set-clinic-name').value = s.clinicName;
+    if (s.docName) document.getElementById('set-doc-name').value = s.docName;
+    if (s.docCreds) document.getElementById('set-doc-creds').value = s.docCreds;
+  } catch(e) {}
+}
+function getClinicInfo() {
+  const el = id => document.getElementById(id)?.value || '';
+  return {
+    name: el('set-clinic-name') || 'Ibdaa Clinic for Orthognathic Surgery',
+    docName: el('set-doc-name') || 'Dr. Belal Abdelrahman',
+    docCreds: el('set-doc-creds') || 'Specialist Orthodontist · License D997'
+  };
+}
+
+/* ── QUICK TEMPLATES ── */
+function applyTemplate(tpl) {
+  const templates = {
+    classI: { 'in-molR':'Class I','in-molL':'Class I','in-oj':'+3mm','in-ob':'20%','rx-sna':'81°','rx-snb':'78°','u-cs-type':'Crowding','u-cs-sev':'Moderate (4–8mm)','l-cs-type':'Crowding','l-cs-sev':'Mild (<4mm)','r_tx-appl':'Fixed Appliance','r_tx-ext':'Non-Extraction','iotn-dhc':'Grade 3 – Moderate', 'diag-primary':'K07.31 – Crowding of teeth','ex-profile':'Straight','ex-sym':'Symmetrical' },
+    classII: { 'in-molR':'Class II Div 1','in-molL':'Class II Div 1','in-oj':'+8mm','in-ob':'50%','rx-sna':'85°','rx-snb':'78°','ex-profile':'Convex','ex-sym':'Symmetrical','ex-lips':'Incompetent','r_tx-appl':'Fixed Appliance','r_tx-ext':'Extraction','iotn-dhc':'Grade 4 – Great','diag-primary':'K07.22 – Malocclusion, Angle\'s Class II','c_vert-deep':true,'c_ap-oj-inc':true },
+    classIII: { 'in-molR':'Class III','in-molL':'Class III','in-oj':'-2mm','in-ob':'0%','rx-sna':'79°','rx-snb':'84°','ex-profile':'Concave','ex-sym':'Symmetrical','r_tx-appl':'Fixed Appliance','r_tx-ext':'Extraction','iotn-dhc':'Grade 4 – Great','diag-primary':'K07.23 – Malocclusion, Angle\'s Class III','c_sag-ant':true,'c_ap-oj-rev':true },
+    openBite: { 'in-oj':'+5mm','in-ob':'0 – AOB','l-mmpa':'32°','u-cs-type':'Spacing','l-cs-type':'None','r_tx-appl':'Fixed Appliance','r_tx-ext':'Extraction','iotn-dhc':'Grade 4 – Great','c_vert-aob':true,'diag-primary':'K07.20 – Anterior open bite' },
+    bimaxillary: { 'in-molR':'Class I','in-molL':'Class I','in-oj':'+6mm','ex-profile':'Convex','ex-lips':'Incompetent','r_tx-appl':'Fixed Appliance','r_tx-ext':'Extraction','c_ap-bimax':true,'c_ap-u-pro':true,'c_ap-l-pro':true,'diag-primary':'K07.21 – Malocclusion, Angle\'s Class I' },
+    alignerClassI: { 'in-molR':'Class I','in-molL':'Class I','in-oj':'+3mm','in-ob':'15%','u-cs-type':'Crowding','u-cs-sev':'Mild (<4mm)','r_tx-appl':'Clear Aligner (Invisalign)','tx-aligner':'Invisalign Lite','r_tx-ext':'Non-Extraction','iotn-dhc':'Grade 2 – Little','diag-primary':'K07.31 – Crowding of teeth' }
+  };
+  const t = templates[tpl]; if (!t) return;
+  Object.entries(t).forEach(([k,val]) => {
+    if (k.startsWith('r_')) { const radio = document.querySelector(`input[name="${k.slice(2)}"][value="${val}"]`); if (radio) { radio.checked = true; } }
+    else if (k.startsWith('c_')) { const cb = document.getElementById(k.slice(2)); if (cb) cb.checked = val; }
+    else { const el = document.getElementById(k); if (el) el.value = val; }
+  });
+  toggleAppliance(); toggleExtraction(); calcANB(); updateAllDots(); updateProgress(); updateSummary(); suggestDiagnosis(); autosave();
+  showToast('Template applied — fill in patient details', '⚡', 3000);
+  showSection('patient');
+}
+
+/* ── REPORT GENERATION ── */
+function splitICD(val){if(!val)return{code:'',desc:''};const m=val.match(/^(K[\d.]+)\s*[–-]\s*(.+)$/);if(m)return{code:m[1],desc:m[2]};return{code:'',desc:val};}
+function row(label,val){return val?`<div class="r-row"><span>${label}:</span> ${val}</div>`:'';}
+
+function generateReport() {
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const molRL=(v('in-molR')&&v('in-molL'))?v('in-molR')+' / '+v('in-molL'):(v('in-molR')||v('in-molL'));
+  const canRL=(v('in-canR')&&v('in-canL'))?v('in-canR')+' / '+v('in-canL'):(v('in-canR')||v('in-canL'));
+  const appliance=radio('tx-appl'),expander=radio('tx-exp'),anchorage=anchorageStr();
+  const extraction=radio('tx-ext'),disart=radio('tx-disart'),retention=radio('tx-ret');
+  const elasticStr=elastics(),apS=apStr(),sagS=sagStr(),vertS=vertStr();
+  const fixedSpec=[v('tx-rx'),v('tx-slot'),v('tx-level')].filter(Boolean).join(', ');
+  const pdx=splitICD(v('diag-primary')),sdx=splitICD(v('diag-secondary')),tdx=splitICD(v('diag-tertiary'));
+  const summaryText=document.getElementById('summary-text').textContent;
+  const summaryNotEmpty=!summaryText.includes('Fill in patient');
+  const growthHas=v('gr-cvm')||v('gr-maturity');
+  const rxHas=v('rx-pan')||v('rx-sna')||v('rx-ceph');
+  const iotnHas=v('iotn-dhc')||v('iotn-ac');
+  const clinic = getClinicInfo();
+
+  let html = `<div class="report-header">
+    <div>
+      <div class="report-clinic-name">${clinic.name}</div>
+      <div class="report-clinic-sub">${clinic.docName} · ${clinic.docCreds}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:10pt;color:#64748b">${today}</div>
+      <div style="height:3px;background:#c8982a;margin-top:6px;width:100px;margin-left:auto"></div>
+    </div>
+  </div>
+  <div class="report-title">Orthodontic Examination Report</div>`;
+
+  if(summaryNotEmpty) html+=`<div class="r-summary-box">${summaryText}</div>`;
+
+  html+=`<div class="patient-box">
+    ${row('Patient Name',v('pt-name'))}${row('Record No.',v('pt-record'))}
+    ${row('Date of Birth',v('pt-dob'))}${row('Age',v('pt-age'))}
+    ${row('Gender',v('pt-gender'))}${row('Exam Date',v('pt-date'))}
+    ${row('Referred By',v('pt-referral'))}
+  </div>`;
+
+  if(v('cc')) html+=`<div class="r-section">Chief Complaint</div><p class="r-full r-italic">"${v('cc')}"</p>`;
+  if(v('med-history')||v('med-allergy')) html+=`<div class="r-section">Medical History</div><div class="r-grid">${row('Medical History',v('med-history')||'Not reported')}${row('Allergies',v('med-allergy')||'NKDA')}</div>`;
+
+  html+=`<div class="r-section">Extraoral Examination</div><div class="r-grid">
+    ${row('Facial Profile',v('ex-profile'))}${row('Facial Symmetry',v('ex-sym'))}
+    ${row('Lip Competence',v('ex-lips'))}${row('Nasolabial Angle',v('ex-naso'))}
+    ${row('Mentolabial Fold',v('ex-mento'))}${row('TMJ / Muscles',v('ex-tmj'))}
+    ${v('ex-notes')?`<div class="r-row" style="grid-column:span 2"><span>Notes:</span> ${v('ex-notes')}</div>`:''}
+  </div>`;
+
+  html+=`<div class="r-section">Intraoral Examination</div>`;
+  html+=`<div class="r-sub">General</div><div class="r-grid">${row('Oral Hygiene',v('in-hygiene'))}${row('Dentition',v('in-dent'))}</div>`;
+  html+=`<div class="r-sub">Upper Jaw (Maxilla)</div><div class="r-grid">${row('Arch Form',v('u-arch'))}${row('Malalignment',v('u-malalign'))}${row('Crowding/Spacing',v('u-cs-type'))}${row('Severity',v('u-cs-sev'))}${row('Amount',v('u-cs-amt'))}${row('Notes',v('u-notes'))}</div>`;
+  html+=`<div class="r-sub">Lower Jaw (Mandible)</div><div class="r-grid">${row('Arch Form',v('l-arch'))}${row('Malalignment',v('l-malalign'))}${row('Crowding/Spacing',v('l-cs-type'))}${row('Severity',v('l-cs-sev'))}${row('Amount',v('l-cs-amt'))}${row('Notes',v('l-notes'))}</div>`;
+  html+=`<div class="r-sub">Inter-Arch Relationships</div><div class="r-grid">${row('Molar Class (R/L)',molRL)}${row('Canine Class (R/L)',canRL)}${row('Overjet',v('in-oj'))}${row('Overbite',v('in-ob'))}${row('Upper Midline',v('in-midU'))}${row('Lower Midline',v('in-midL'))}</div>`;
+  if(apS) html+=`<div class="r-sub">Antero-Posterior</div><div class="r-grid">${row('Findings',apS)}${row('Notes',v('ap-note'))}</div>`;
+  if(sagS) html+=`<div class="r-sub">Sagittal</div><div class="r-grid">${row('Findings',sagS)}${row('Notes',v('sag-note'))}</div>`;
+  if(vertS) html+=`<div class="r-sub">Vertical</div><div class="r-grid">${row('Findings',vertS)}${row('MMPA',v('l-mmpa'))}${row('Vertical Range',v('vert-range'))}${row('Notes',v('vert-note'))}</div>`;
+
+  if(growthHas) html+=`<div class="r-section">Growth Status</div><div class="r-grid">${row('CVM Stage',v('gr-cvm'))}${row('Skeletal Maturity',v('gr-maturity'))}${row('Age Group',v('gr-agegroup'))}${row('Notes',v('gr-notes'))}</div>`;
+  if(rxHas) html+=`<div class="r-section">Radiographic Findings</div><div class="r-grid">${row('Panoramic',v('rx-pan'))}${row('Cephalometric',v('rx-ceph'))}${row('SNA',v('rx-sna'))}${row('SNB',v('rx-snb'))}${row('ANB (auto)',v('rx-anb'))}${row('Wits',v('rx-wits'))}${v('rx-notes')?`<div class="r-row" style="grid-column:span 2"><span>Notes:</span> ${v('rx-notes')}</div>`:''}</div>`;
+  if(iotnHas) html+=`<div class="r-section">IOTN</div><div class="r-grid">${row('DHC Grade',v('iotn-dhc'))}${row('AC Score',v('iotn-ac'))}${row('Notes',v('iotn-notes'))}</div>`;
+
+  html+=`<div class="r-section">Diagnosis</div>`;
+  if(pdx.code||pdx.desc) html+=`<p style="font-size:11pt;margin:6px 0 2px"><strong style="color:#1b2d5b">${pdx.code}</strong> ${pdx.desc}</p>`;
+  if(sdx.code||sdx.desc) html+=`<p style="font-size:10.5pt;margin:2px 0"><strong>${sdx.code}</strong> ${sdx.desc}</p>`;
+  if(tdx.code||tdx.desc) html+=`<p style="font-size:10.5pt;margin:2px 0"><strong>${tdx.code}</strong> ${tdx.desc}</p>`;
+  if(v('diag-notes')) html+=`<p style="margin-top:8px;font-size:10.5pt"><strong>Clinical Description:</strong><br>${v('diag-notes')}</p>`;
+
+  html+=`<div class="r-section">Treatment Plan</div><div class="r-grid">
+    ${row('Appliance Type',appliance)}${fixedSpec?row('Fixed Specification',fixedSpec):''}${v('tx-functional-type')?row('Functional Appliance',v('tx-functional-type')):''}${v('tx-functional-stage')?row('Treatment Approach',v('tx-functional-stage')):''}
+    ${row('Expanders',expander)}${row('Anchorage',anchorage)}
+    ${row('Extraction',extraction)}${extraction==='Extraction'?row('Teeth',v('tx-ext-teeth')):''}
+    ${row('Disarticulation',disart)}${row('Elastics',elasticStr)}
+    ${row('Duration',v('pl-dur'))}${retention?row('Retention',retention):''}
+    ${row('Retention Details',v('pl-ret'))}
+  </div>`;
+  if(v('pl-notes')) html+=`<p style="margin-top:6px;font-size:10.5pt"><strong>Notes:</strong><br>${v('pl-notes')}</p>`;
+
+  html += PhotoManager.reportHTML();
+
+  html+=`<br><br><div style="border-top:1px solid #cbd5e1;padding-top:12px;margin-top:32px;display:grid;grid-template-columns:1fr 1fr">
+    <div><p style="font-weight:700;color:#1b2d5b">${clinic.docName}</p><p style="font-size:10pt">${clinic.docCreds}</p><p style="font-size:10pt">${clinic.name}</p></div>
+    <div style="text-align:right"><div style="border-bottom:1px solid #999;width:180px;display:inline-block;margin-bottom:4px">&nbsp;</div><br><p style="font-size:10pt">Signature &amp; Stamp</p><p style="font-size:10pt">Date: ${today}</p></div>
+  </div>
+  <div style="margin-top:20px;padding-top:10px;border-top:1px dashed #e2e8f0;text-align:center">
+    <p style="font-size:8.5pt;color:#94a3b8;letter-spacing:.3px">Powered by <strong style="color:#c8982a">BAYAN Healthcare Analytics</strong></p>
+  </div>`;
+
+  document.getElementById('report-body').innerHTML = `<div style="padding:32px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11pt;line-height:1.6;color:#1e293b">${html}</div>`;
+  showSection('preview');
+  showToast('Report generated', '📄', 2000);
+}
+
+/* ── PDF / PRINT / WORD ── */
+function doPrint(){ savePDF(); }
+
+function savePDF(){
+  generateReport();
+  const patientName = (v('pt-name')||'Patient').replace(/\s+/g,'-');
+  setTimeout(()=>{
+    const w = window.open('','_blank');
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OrthoReport — ${v('pt-name')||'Patient'}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Plus Jakarta Sans',sans-serif;font-size:11pt;color:#1e293b;line-height:1.6;background:#e8ecf0;min-height:100vh}
+  /* ── TOOLBAR ── */
+  #pdf-toolbar{
+    position:fixed;top:0;left:0;right:0;z-index:999;
+    background:#1b2d5b;padding:10px 24px;
+    display:flex;align-items:center;gap:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
+  #pdf-toolbar .tb-brand{font-size:14px;font-weight:700;color:white;margin-right:auto;display:flex;align-items:center;gap:8px}
+  #pdf-toolbar .tb-brand span{color:#c8982a}
+  #pdf-toolbar .tb-powered{font-size:10px;color:rgba(255,255,255,.45);font-style:italic;margin-right:8px}
+  .tb-pdf-btn{
+    height:34px;padding:0 18px;border:none;border-radius:6px;
+    font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;
+  }
+  .tb-pdf-btn-primary{background:#c8982a;color:#1b2d5b}
+  .tb-pdf-btn-primary:hover{background:#e4b84a}
+  .tb-pdf-btn-ghost{background:rgba(255,255,255,.1);color:white;border:1px solid rgba(255,255,255,.15)}
+  .tb-pdf-btn-ghost:hover{background:rgba(255,255,255,.2)}
+  .tb-hint{font-size:11px;color:rgba(255,255,255,.5);margin-left:4px}
+  /* ── PAGE ── */
+  #page-wrap{padding:72px 32px 48px;display:flex;justify-content:center}
+  #report-page{
+    background:white;width:210mm;min-height:297mm;
+    padding:20mm;
+    box-shadow:0 4px 24px rgba(0,0,0,.18);
+    border-radius:2px;
+  }
+  /* ── REPORT STYLES ── */
+  .report-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:14px;border-bottom:3px solid #c8982a}
+  .report-clinic-name{font-size:15pt;font-weight:700;color:#1b2d5b}
+  .report-clinic-sub{font-size:10pt;color:#64748b;margin-top:2px}
+  .report-title{font-size:17pt;font-weight:800;color:#1b2d5b;margin-bottom:14px;letter-spacing:-.3px}
+  .r-section{font-size:12pt;font-weight:700;color:#1b2d5b;margin:14px 0 6px;padding-bottom:4px;border-bottom:2px solid #c8982a}
+  .r-sub{font-size:11pt;font-weight:600;color:#334155;margin:10px 0 4px}
+  .r-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+  .r-row{font-size:10.5pt;padding:2px 0}
+  .r-row span{font-weight:600;color:#475569}
+  .r-full{font-size:10.5pt;padding:4px 0}
+  .r-italic{font-style:italic}
+  .r-summary-box{background:#fdf6e3;border-left:3px solid #c8982a;padding:10px 14px;font-style:italic;margin:10px 0;font-size:10.5pt}
+  .patient-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 14px;margin:12px 0;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+  .r-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+  .r-photo-item img{width:100%;height:110px;object-fit:cover;border-radius:4px}
+  .r-photo-item p{font-size:9pt;color:#64748b;text-align:center;margin-top:4px}
+  @media print{
+    #pdf-toolbar{display:none!important}
+    body{background:white}
+    #page-wrap{padding:0;display:block}
+    #report-page{box-shadow:none;width:100%;min-height:unset;padding:15mm}
+  }
+</style>
+</head><body>
+<div id="pdf-toolbar">
+  <div class="tb-brand"><span>🦷</span> OrthoFlow &nbsp;·&nbsp; Report Preview</div>
+  <span class="tb-powered">Powered by BAYAN Healthcare Analytics</span>
+  <span class="tb-hint">To save as PDF: </span>
+  <button class="tb-pdf-btn tb-pdf-btn-primary" onclick="window.print()">🖨 Print / Save as PDF</button>
+  <button class="tb-pdf-btn tb-pdf-btn-ghost" onclick="window.close()">✕ Close</button>
+</div>
+<div id="page-wrap">
+  <div id="report-page">
+    ${document.getElementById('report-body').innerHTML}
+  </div>
+</div>
+</body></html>`);
+    w.document.close();
+    w.focus();
+    showToast('PDF preview opened','📄',2000);
+  },200);
+}
+
+function saveWord() {
+  generateReport();
+  const clinic = getClinicInfo();
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const bodyHTML = document.getElementById('report-body').innerHTML;
+  const wordHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>body{font-family:Calibri,sans-serif;font-size:11pt;line-height:1.5;margin:2cm}.r-section{font-size:13pt;font-weight:bold;color:#1b2d5b;border-bottom:2px solid #c8982a;margin:12pt 0 6pt}.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:4pt 16pt}.r-row span{font-weight:bold}.patient-box{background:#f5f5f5;padding:10pt;margin:10pt 0;display:grid;grid-template-columns:1fr 1fr}.r-summary-box{background:#fdf6e3;border-left:3pt solid #c8982a;padding:8pt;font-style:italic;margin:8pt 0}</style></head><body>${bodyHTML}</body></html>`;
+  const blob = new Blob(['\ufeff'+wordHTML],{type:'application/msword'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`OrthoReport-${(v('pt-name')||'Patient').replace(/\s+/g,'-')}.doc`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('Word document downloaded','📝',2500);
+}
+
+/* ── INIT ── */
+window.onload = () => {
+  // Migrate old SHA-256 hash
+  const storedHash = localStorage.getItem('ortho_pin_hash');
+  if (storedHash && /^[0-9a-f]{64}$/i.test(storedHash)) {
+    localStorage.removeItem('ortho_pin_hash'); localStorage.removeItem('ortho_pin_changed');
+  }
+  document.getElementById('pt-date').valueAsDate = new Date();
+  buildToothChart();
+  PhotoManager.init().then(() => {
+    loadFromStorage();
+    loadSettings();
+  });
+  toggleAppliance(); toggleExtraction();
+  updateAllDots(); updateProgress(); updateSummary(); suggestDiagnosis();
+  updatePatientPill();
+  resetInactivityTimer();
+};
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key === 'Enter') { e.preventDefault(); generateReport(); }
+  if (document.getElementById('pin-overlay').style.display !== 'none') {
+    if (e.key >= '0' && e.key <= '9') pinKey(e.key);
+    if (e.key === 'Backspace') pinBackspace();
+  }
+  if (document.getElementById('lock-overlay').style.display === 'flex') {
+    if (e.key >= '0' && e.key <= '9') lockKey(e.key);
+    if (e.key === 'Backspace') lockBackspace();
+  }
+});
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay && overlay.id !== 'tooth-modal') closeModal(overlay.id);
+  });
+});
+</script>
+
+<!-- ── PWA: SERVICE WORKER REGISTRATION ───────────────────────────── -->
+<div id="pwa-update-banner" style="
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;
+  background:#1e40af;color:#fff;padding:12px 20px;
+  display:none;align-items:center;justify-content:space-between;
+  font-family:inherit;font-size:14px;box-shadow:0 -2px 12px rgba(0,0,0,0.3);">
+  <span>🔄 A new version of OrthoFlow is available.</span>
+  <button onclick="pwaApplyUpdate()" style="
+    background:#fff;color:#1e40af;border:none;padding:6px 16px;
+    border-radius:6px;font-weight:600;cursor:pointer;margin-left:16px;">
+    Update Now
+  </button>
+</div>
+
+<script>
+(function() {
+  if (!('serviceWorker' in navigator)) return;
+
+  let _newSW = null;
+
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // Check for updates every time the page gains focus
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) reg.update();
+    });
+
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          // New version waiting — show update banner
+          _newSW = newWorker;
+          const banner = document.getElementById('pwa-update-banner');
+          if (banner) banner.style.display = 'flex';
+        }
+      });
+    });
+  }).catch(err => console.warn('SW registration failed:', err));
+
+  // Reload once the new SW has taken control
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) { refreshing = true; window.location.reload(); }
+  });
+
+  window.pwaApplyUpdate = function() {
+    if (_newSW) _newSW.postMessage({ type: 'SKIP_WAITING' });
+  };
+})();
+</script>
+</body>
+</html>
